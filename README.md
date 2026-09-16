@@ -28,6 +28,10 @@ Site statique, sans build ni dépendance à installer : HTML, CSS et JavaScript 
   familial, tranches et quotités (distinctes pour l'habitat collectif et la maison
   individuelle), plafonnement par le montant des autres prêts. Les questions sur la
   composition du foyer et la zone n'apparaissent que lorsque le PTZ est possible.
+- **Revenu fiscal de référence** : champ facultatif à l'étape 3, car c'est le RFR de
+  l'année N-2 et non le salaire du moment qui fixe la tranche du PTZ. Renseigné, il prend
+  le pas sur les revenus annualisés ; laissé vide, le résultat indique l'approximation
+  retenue. Les années affichées se calculent à partir de la date courante.
 - **Zone déterminée par le code postal** : la saisie du code postal interroge
   `geo.api.gouv.fr` pour lister les communes correspondantes, et la zone ABC est lue dans
   la table nationale embarquée. Un code postal partagé par plusieurs communes de zones

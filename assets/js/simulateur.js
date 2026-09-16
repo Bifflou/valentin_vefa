@@ -144,12 +144,19 @@
       apport: null,
       duree: 20,
       personnes: 1,
-      zone: "A"
+      zone: "A",
+      rfr: null
     };
+
+    /* Le PTZ retient le revenu fiscal de référence de l'année N-2, qui figure
+       sur l'avis d'imposition de l'année suivante. */
+    var anneeRevenus = new Date().getFullYear() - 2;
+    form.querySelectorAll("[data-annee-rfr]").forEach(function (el) { el.textContent = anneeRevenus; });
+    form.querySelectorAll("[data-annee-rfr-avis]").forEach(function (el) { el.textContent = anneeRevenus + 1; });
 
     /* Les deux questions du PTZ ne concernent que la primo-accession
        dans le neuf pour une résidence principale : ailleurs, on ne les pose pas. */
-    var ptzFields = form.querySelector("[data-ptz-fields]");
+    var ptzFields = Array.prototype.slice.call(form.querySelectorAll("[data-ptz-fields]"));
     function isNeuf() {
       return state.bien === "appartement-neuf" || state.bien === "maison-neuve";
     }
@@ -157,7 +164,7 @@
       return state.objectif === "principale" && state.primo === "oui" && isNeuf();
     }
     function syncPtzFields() {
-      if (ptzFields) ptzFields.style.display = ptzPossible() ? "" : "none";
+      ptzFields.forEach(function (el) { el.style.display = ptzPossible() ? "" : "none"; });
     }
 
     /* ---------- Navigation ---------- */
@@ -365,13 +372,18 @@
       var prixBien = enveloppe / (1 + notaryRate);
       var fraisNotaire = prixBien * notaryRate;
 
+      /* Ressources du PTZ : le revenu fiscal de référence s'il est connu,
+         sinon les revenus nets annualisés, qui n'en sont qu'une approximation. */
+      var rfrSaisi = state.rfr > 0;
+      var revenuPtz = rfrSaisi ? state.rfr : revenus * 12;
+
       /* Le PTZ vient s'ajouter au budget : on l'estime sur le prix finançable
          par le prêt principal, sans boucler sur l'enveloppe totale. */
       var ptz = ptzPossible()
         ? estimatePtz({
             personnes: state.personnes,
             zone: state.zone,
-            revenuAnnuel: revenus * 12,
+            revenuAnnuel: revenuPtz,
             prix: prixBien,
             autresPrets: capacite,
             collectif: state.bien === "appartement-neuf"
@@ -405,10 +417,16 @@
         set("ptz-plafond", euros(ptz.plafondOperation));
         set("ptz-base", euros(ptz.base));
         set("budget-total", euros(prixBien + ptz.montant));
+        set("ptz-assiette", rfrSaisi
+          ? "Calcul fondé sur le revenu fiscal de référence " + anneeRevenus + " que vous avez indiqué, soit " +
+            euros(state.rfr) + "."
+          : "Faute de revenu fiscal de référence renseigné, le calcul part de vos revenus nets annualisés (" +
+            euros(revenuPtz) + "). L'administration retient le revenu fiscal de référence " + anneeRevenus +
+            " : la tranche retenue peut changer.");
       } else if (ptzKo) {
         var motif = ptz.motif === "ressources"
-          ? "Avec " + euros(revenus * 12) + " de revenus annuels pour " + ptz.personnes +
-            " personne" + (ptz.personnes > 1 ? "s" : "") + " en zone " + state.zone +
+          ? "Avec " + euros(revenuPtz) + (rfrSaisi ? " de revenu fiscal de référence " + anneeRevenus : " de revenus annuels") +
+            " pour " + ptz.personnes + " personne" + (ptz.personnes > 1 ? "s" : "") + " en zone " + state.zone +
             ", vous dépassez le plafond de ressources du PTZ, fixé à " + euros(ptz.plafondRessources) + "."
           : "Le prêt à taux zéro est réservé aux primo-accédants qui achètent leur résidence principale dans le neuf. D'autres dispositifs peuvent s'appliquer à votre situation.";
         var motifEl = ptzKo.querySelector("[data-ptz-ko-text]");

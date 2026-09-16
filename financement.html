@@ -232,6 +232,17 @@
             <span class="hint">Crédit auto, prêt personnel, autre crédit immobilier. Laissez à zéro si vous n'en avez aucun.</span>
           </div>
 
+          <div class="field" data-ptz-fields>
+            <label for="rfr">Revenu fiscal de référence <span data-annee-rfr>N-2</span> (€)</label>
+            <input class="input" type="number" id="rfr" name="rfr" min="0" step="500" inputmode="numeric" placeholder="Facultatif">
+            <span class="hint">
+              C'est ce revenu, et non votre salaire actuel, qui détermine votre prêt à taux zéro. Vous le trouverez sur
+              votre avis d'imposition <span data-annee-rfr-avis>N-1</span>, à la ligne « revenu fiscal de référence ».
+              Additionnez les avis de toutes les personnes qui occuperont le logement. Laissé vide, nous partons de vos
+              revenus nets annualisés.
+            </span>
+          </div>
+
           <div class="sim-nav">
             <button type="button" class="btn btn-outline" data-sim-prev>Retour</button>
             <button type="button" class="btn btn-primary" data-sim-next>Continuer</button>
@@ -335,6 +346,7 @@
               Ce prêt sans intérêts s'ajoute à votre budget, qui atteindrait alors
               <strong data-result="budget-total">0 €</strong>.
             </p>
+            <p class="d" data-result="ptz-assiette"></p>
           </div>
 
           <div class="result-note" data-ptz-ko>
@@ -344,7 +356,7 @@
 
           <div class="result-note">
             <i class="ph ph-info" aria-hidden="true"></i>
-            <span>Simulation indicative calculée avec un taux d'endettement de <span data-result="endettement">35 %</span> et un taux de marché estimé. Le prêt à taux zéro applique le barème officiel en vigueur, en retenant vos revenus nets annualisés là où l'administration retient le revenu fiscal de référence de l'année N-2 : le montant définitif peut donc varier. Cette simulation ne constitue ni une offre de prêt, ni un conseil en investissement. Seule une banque peut valider votre financement.</span>
+            <span>Simulation indicative calculée avec un taux d'endettement de <span data-result="endettement">35 %</span> et un taux de marché estimé. Le prêt à taux zéro applique le barème officiel en vigueur. Cette simulation ne constitue ni une offre de prêt, ni un conseil en investissement. Seule une banque peut valider votre financement.</span>
           </div>
 
           <div class="sim-nav">
