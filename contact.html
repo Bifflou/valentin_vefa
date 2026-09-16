@@ -10,10 +10,13 @@
 <meta property="og:description" content="Un conseiller Vefalys vous répond sous 24 heures ouvrées.">
 <meta property="og:type" content="website">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="32x32">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -171,10 +174,10 @@
             </div>
           </div>
 
-          <div class="map-embed">
-            <iframe title="Carte du bureau Vefalys, 58 rue de Monceau à Paris" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-                    src="https://www.google.com/maps?q=58%20rue%20de%20Monceau%2075008%20Paris&output=embed"></iframe>
-          </div>
+          <div class="map-embed" id="map-contact" data-lat="48.8783427" data-lng="2.3121663"
+               role="img" aria-label="Carte de localisation du bureau Vefalys, 58 rue de Monceau, Paris 8e"></div>
+          <a class="map-link" href="https://www.google.com/maps/dir/?api=1&destination=58+rue+de+Monceau+75008+Paris"
+             target="_blank" rel="noopener">Ouvrir l'itinéraire <i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>
         </aside>
 
       </div>
@@ -255,6 +258,7 @@
   </div>
 </footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="assets/js/main.js"></script>
 </body>
 </html>

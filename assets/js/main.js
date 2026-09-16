@@ -134,6 +134,43 @@
       counters.forEach(function (el) { countObserver.observe(el); });
     }
 
+    /* ---------- Carte de contact ----------
+       Carte pilotée par nous plutôt qu'un iframe Google, dont les boutons
+       superposés ne peuvent pas être retirés sans enfreindre ses conditions. */
+    var mapEl = document.getElementById("map-contact");
+    if (mapEl && window.L) {
+      /* Tuiles OpenStreetMap : aucune cle requise. Pour un fond de carte plus
+         sobre, remplacer cette URL par un fournisseur a cle (MapTiler, Mapbox). */
+      var TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+      var coords = [parseFloat(mapEl.getAttribute("data-lat")), parseFloat(mapEl.getAttribute("data-lng"))];
+      var map = L.map(mapEl, {
+        center: coords,
+        zoom: 13,
+        zoomControl: false,
+        dragging: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        touchZoom: false,
+        boxZoom: false,
+        keyboard: false
+      });
+      map.attributionControl.setPrefix("");
+      L.tileLayer(TILE_URL, {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 18
+      }).addTo(map);
+      L.marker(coords, {
+        interactive: false,
+        keyboard: false,
+        icon: L.divIcon({
+          className: "map-pin",
+          html: '<i class="ph-fill ph-map-pin"></i>',
+          iconSize: [32, 32],
+          iconAnchor: [16, 30]
+        })
+      }).addTo(map);
+    }
+
     /* ---------- FAQ: filtres par catégorie ---------- */
     var faqChips = document.querySelectorAll("[data-faq-cat]");
     var faqItems = document.querySelectorAll("[data-faq-item]");

@@ -29,6 +29,9 @@ Site statique, sans build ni dépendance à installer : HTML, CSS et JavaScript 
 - **FAQ filtrable** par thème, avec ouverture directe d'un thème par l'ancre de l'URL
   (`faq.html#financement`).
 - **Formulaire de contact** validé côté client, avec messages d'erreur sous chaque champ.
+- **Carte de localisation** construite avec Leaflet et les fonds de carte OpenStreetMap,
+  sans aucune commande superposée : les conditions de l'iframe Google interdisent de masquer
+  ses boutons, celle-ci n'en affiche aucun. Fond de carte assombri en thème sombre.
 - **Thème clair et sombre** : suit la préférence système, bascule manuelle mémorisée.
 - **Animations** : révélation au défilement et compteurs via `IntersectionObserver`,
   neutralisés sous `prefers-reduced-motion`.
@@ -71,3 +74,6 @@ npx serve .
    garantie financière, hébergeur) et faire relire par un conseil juridique.
 5. **Taux du simulateur** : les taux indicatifs sont définis dans `RATES`
    en haut de `assets/js/simulateur.js`, à actualiser selon le marché.
+6. **Fond de carte** : les tuiles viennent d'OpenStreetMap, sans clé. Sa politique
+   d'usage vise un trafic modéré ; pour un site commercial à forte audience, passer à un
+   fournisseur à clé (MapTiler, Mapbox) en remplaçant `TILE_URL` dans `assets/js/main.js`.
