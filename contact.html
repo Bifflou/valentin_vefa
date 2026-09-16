@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact | Vefalys</title>
+<meta name="description" content="Contactez un conseiller Vefalys : réponse sous 24 heures ouvrées pour étudier votre projet d'achat en immobilier neuf. Premier rendez-vous sans frais.">
+<link rel="canonical" href="https://vefalys.fr/contact.html">
+<meta property="og:title" content="Contact | Vefalys">
+<meta property="og:description" content="Un conseiller Vefalys vous répond sous 24 heures ouvrées.">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Aller au contenu</a>
+<div id="header-sentinel"></div>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand" aria-label="Vefalys, retour à l'accueil"><img src="assets/img/vefalys.png" alt="Vefalys" width="309" height="45"></a>
+    <nav class="main-nav" aria-label="Navigation principale">
+      <a href="programmes.html" data-nav-link>Programmes</a>
+      <a href="services.html" data-nav-link>Nos services</a>
+      <a href="financement.html" data-nav-link>Financement</a>
+      <a href="avis.html" data-nav-link>Avis</a>
+      <a href="faq.html" data-nav-link>FAQ</a>
+      <a href="a-propos.html" data-nav-link>À propos</a>
+    </nav>
+    <div class="header-actions">
+      <button class="theme-toggle" data-theme-toggle aria-label="Basculer le thème clair ou sombre">
+        <i class="ph ph-sun" aria-hidden="true"></i><i class="ph ph-moon" aria-hidden="true"></i>
+      </button>
+      <a href="contact.html" class="btn btn-primary btn-sm">Prendre rendez-vous</a>
+      <button class="nav-toggle" data-nav-toggle aria-label="Ouvrir le menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<nav class="mobile-nav" data-mobile-nav aria-label="Navigation mobile">
+  <a href="programmes.html">Programmes</a>
+  <a href="services.html">Nos services</a>
+  <a href="financement.html">Financement</a>
+  <a href="avis.html">Avis clients</a>
+  <a href="faq.html">FAQ</a>
+  <a href="a-propos.html">À propos</a>
+  <a href="contact.html" class="btn btn-primary">Prendre rendez-vous</a>
+</nav>
+
+<main id="main">
+  <section class="page-head">
+    <div class="container">
+      <nav class="crumbs" aria-label="Fil d'Ariane">
+        <a href="index.html">Accueil</a><i class="ph ph-caret-right" aria-hidden="true"></i><span>Contact</span>
+      </nav>
+      <div class="section-head" style="margin-bottom:0;">
+        <span class="eyebrow">Parlons de votre projet</span>
+        <h1>Prendre rendez-vous</h1>
+        <p class="lede">Décrivez votre projet en quelques lignes. Un conseiller vous rappelle sous 24 heures ouvrées pour en discuter.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section--tight">
+    <div class="container">
+      <div class="detail-layout">
+
+        <div>
+          <div class="result-note" data-programme-notice style="display:none;margin-bottom:26px;">
+            <i class="ph ph-info" aria-hidden="true"></i>
+            <span>Votre demande concerne le programme <strong data-programme-name></strong>. Le message a été prérempli, vous pouvez le compléter librement.</span>
+          </div>
+
+          <form data-validate data-mailto="contact@vefalys.fr" novalidate>
+            <h2 style="font-size:24px;margin-bottom:24px;">Votre message</h2>
+
+            <div class="row-2">
+              <div class="field">
+                <label for="prenom">Prénom *</label>
+                <input class="input" type="text" id="prenom" name="prenom" autocomplete="given-name" required>
+                <span class="error-msg"><i class="ph ph-warning-circle" aria-hidden="true"></i>Indiquez votre prénom.</span>
+              </div>
+              <div class="field">
+                <label for="nom">Nom *</label>
+                <input class="input" type="text" id="nom" name="nom" autocomplete="family-name" required>
+                <span class="error-msg"><i class="ph ph-warning-circle" aria-hidden="true"></i>Indiquez votre nom.</span>
+              </div>
+            </div>
+
+            <div class="row-2">
+              <div class="field">
+                <label for="email">Adresse e-mail *</label>
+                <input class="input" type="email" id="email" name="email" autocomplete="email" placeholder="vous@exemple.fr" required>
+                <span class="error-msg"><i class="ph ph-warning-circle" aria-hidden="true"></i>Indiquez une adresse e-mail valide.</span>
+              </div>
+              <div class="field">
+                <label for="telephone">Téléphone</label>
+                <input class="input" type="tel" id="telephone" name="telephone" autocomplete="tel" placeholder="06 00 00 00 00">
+                <span class="hint">Facultatif, mais utile pour vous rappeler plus vite.</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="sujet">Sujet *</label>
+              <select class="input" id="sujet" name="sujet" required>
+                <option value="">Choisissez un sujet</option>
+                <option value="achat-neuf">Achat immobilier neuf</option>
+                <option value="investissement">Investissement locatif</option>
+                <option value="financement">Simulation et financement</option>
+                <option value="autre">Autre question</option>
+              </select>
+              <span class="error-msg"><i class="ph ph-warning-circle" aria-hidden="true"></i>Sélectionnez un sujet.</span>
+            </div>
+
+            <div class="field">
+              <label for="message">Votre message *</label>
+              <textarea class="input" id="message" name="message" rows="6" placeholder="Ville recherchée, budget approximatif, nombre de pièces, échéance du projet..." required></textarea>
+              <span class="hint">Plus votre message est précis, plus notre première sélection sera pertinente.</span>
+              <span class="error-msg"><i class="ph ph-warning-circle" aria-hidden="true"></i>Décrivez votre demande en quelques mots.</span>
+            </div>
+
+            <div class="field">
+              <div class="check-row">
+                <input type="checkbox" id="consent" name="consent" required>
+                <label for="consent">J'accepte que mes données soient utilisées par Vefalys pour traiter ma demande, conformément à la <a href="confidentialite.html">politique de confidentialité</a>. *</label>
+              </div>
+              <span class="error-msg"><i class="ph ph-warning-circle" aria-hidden="true"></i>Votre accord est nécessaire pour traiter la demande.</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Envoyer ma demande</button>
+            <p class="hint" style="margin-top:14px;max-width:56ch;">
+              L'envoi ouvre votre logiciel de messagerie avec le message prérempli. Vous pouvez aussi écrire directement à
+              <a href="mailto:contact@vefalys.fr" style="color:var(--accent);font-weight:600;">contact@vefalys.fr</a>.
+            </p>
+          </form>
+
+          <div class="form-success" data-form-success>
+            <div class="ico"><i class="ph ph-check-circle" aria-hidden="true"></i></div>
+            <h3>Votre message est prêt à partir</h3>
+            <p>Votre logiciel de messagerie vient de s'ouvrir avec la demande préremplie. Il ne reste plus qu'à l'envoyer, et un conseiller vous répond sous 24 heures ouvrées.</p>
+            <p style="margin-top:14px;">Rien ne s'est ouvert&#8239;? Écrivez-nous à <a href="mailto:contact@vefalys.fr" style="color:var(--accent);font-weight:700;">contact@vefalys.fr</a> ou appelez le <a href="tel:+33669215665" style="color:var(--accent);font-weight:700;">06 69 21 56 65</a>.</p>
+          </div>
+        </div>
+
+        <aside>
+          <h2 style="font-size:24px;margin-bottom:6px;">Nos coordonnées</h2>
+          <div class="coord-item" style="border-top:0;">
+            <span class="ico"><i class="ph ph-envelope-simple" aria-hidden="true"></i></span>
+            <div>
+              <strong>E-mail</strong>
+              <a href="mailto:contact@vefalys.fr">contact@vefalys.fr</a>
+            </div>
+          </div>
+          <div class="coord-item">
+            <span class="ico"><i class="ph ph-phone" aria-hidden="true"></i></span>
+            <div>
+              <strong>Téléphone</strong>
+              <a href="tel:+33669215665">+33 6 69 21 56 65</a>
+            </div>
+          </div>
+          <div class="coord-item">
+            <span class="ico"><i class="ph ph-clock" aria-hidden="true"></i></span>
+            <div>
+              <strong>Horaires</strong>
+              <p>Lundi au vendredi, 9h à 20h<br>Samedi, 9h à 18h</p>
+            </div>
+          </div>
+          <div class="coord-item">
+            <span class="ico"><i class="ph ph-map-pin" aria-hidden="true"></i></span>
+            <div>
+              <strong>Adresse</strong>
+              <p>58 rue de Monceau<br>75008 Paris</p>
+            </div>
+          </div>
+
+          <div class="map-embed">
+            <iframe title="Carte du bureau Vefalys, 58 rue de Monceau à Paris" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+                    src="https://www.google.com/maps?q=58%20rue%20de%20Monceau%2075008%20Paris&output=embed"></iframe>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Réassurance -->
+  <section class="section--tight" style="background: var(--bg-dim);">
+    <div class="container">
+      <ul class="trust-strip" style="border:0;padding:0;" data-reveal-group>
+        <li class="trust-item">
+          <i class="ph ph-clock-countdown" aria-hidden="true"></i>
+          <div><strong>Réponse sous 24h</strong><span>Jours ouvrés, par téléphone ou e-mail</span></div>
+        </li>
+        <li class="trust-item">
+          <i class="ph ph-handshake" aria-hidden="true"></i>
+          <div><strong>Rendez-vous informatif</strong><span>Sans frais et sans engagement</span></div>
+        </li>
+        <li class="trust-item">
+          <i class="ph ph-lock-key" aria-hidden="true"></i>
+          <div><strong>Données protégées</strong><span>Jamais revendues à des tiers</span></div>
+        </li>
+        <li class="trust-item">
+          <i class="ph ph-map-trifold" aria-hidden="true"></i>
+          <div><strong>Partout en France</strong><span>Échanges à distance ou en agence</span></div>
+        </li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="brand" aria-label="Vefalys, retour à l'accueil"><img src="assets/img/vefalys.png" alt="Vefalys" width="309" height="45"></a>
+        <p>Courtier en immobilier neuf. Tous les programmes de France, au prix direct promoteur.</p>
+        <div class="footer-social">
+          <a href="https://www.linkedin.com" aria-label="LinkedIn" rel="noopener"><i class="ph ph-linkedin-logo" aria-hidden="true"></i></a>
+          <a href="https://www.instagram.com" aria-label="Instagram" rel="noopener"><i class="ph ph-instagram-logo" aria-hidden="true"></i></a>
+          <a href="mailto:contact@vefalys.fr" aria-label="Envoyer un e-mail"><i class="ph ph-envelope-simple" aria-hidden="true"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Explorer</h4>
+        <ul>
+          <li><a href="programmes.html">Programmes neufs</a></li>
+          <li><a href="services.html">Nos services</a></li>
+          <li><a href="financement.html">Simulateur de budget</a></li>
+          <li><a href="avis.html">Avis clients</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>À savoir</h4>
+        <ul>
+          <li><a href="faq.html">Questions fréquentes</a></li>
+          <li><a href="a-propos.html">Qui sommes-nous</a></li>
+          <li><a href="faq.html#financement">Prêt à taux zéro</a></li>
+          <li><a href="faq.html#juridique">Contrat VEFA</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:contact@vefalys.fr">contact@vefalys.fr</a></li>
+          <li><a href="tel:+33669215665">+33 6 69 21 56 65</a></li>
+          <li><a href="contact.html">Prendre rendez-vous</a></li>
+          <li><span style="font-size:14.5px;color:var(--ink-soft)">Lun au ven, 9h à 20h</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>Droit d'auteur &copy; <span data-year>2026</span> Vefalys. Tous droits réservés.</span>
+      <div class="legal-links">
+        <a href="mentions-legales.html">Mentions légales</a>
+        <a href="confidentialite.html">Confidentialité</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>

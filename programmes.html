@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Programmes immobiliers neufs | Vefalys</title>
+<meta name="description" content="Parcourez les programmes immobiliers neufs disponibles partout en France : appartements et maisons au prix direct promoteur, filtrés par région, type de bien et budget.">
+<link rel="canonical" href="https://vefalys.fr/programmes.html">
+<meta property="og:title" content="Programmes immobiliers neufs | Vefalys">
+<meta property="og:description" content="Appartements et maisons neufs partout en France, au prix direct promoteur.">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://images.unsplash.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Aller au contenu</a>
+<div id="header-sentinel"></div>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand" aria-label="Vefalys, retour à l'accueil"><img src="assets/img/vefalys.png" alt="Vefalys" width="309" height="45"></a>
+    <nav class="main-nav" aria-label="Navigation principale">
+      <a href="programmes.html" data-nav-link>Programmes</a>
+      <a href="services.html" data-nav-link>Nos services</a>
+      <a href="financement.html" data-nav-link>Financement</a>
+      <a href="avis.html" data-nav-link>Avis</a>
+      <a href="faq.html" data-nav-link>FAQ</a>
+      <a href="a-propos.html" data-nav-link>À propos</a>
+    </nav>
+    <div class="header-actions">
+      <button class="theme-toggle" data-theme-toggle aria-label="Basculer le thème clair ou sombre">
+        <i class="ph ph-sun" aria-hidden="true"></i><i class="ph ph-moon" aria-hidden="true"></i>
+      </button>
+      <a href="contact.html" class="btn btn-primary btn-sm">Prendre rendez-vous</a>
+      <button class="nav-toggle" data-nav-toggle aria-label="Ouvrir le menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<nav class="mobile-nav" data-mobile-nav aria-label="Navigation mobile">
+  <a href="programmes.html">Programmes</a>
+  <a href="services.html">Nos services</a>
+  <a href="financement.html">Financement</a>
+  <a href="avis.html">Avis clients</a>
+  <a href="faq.html">FAQ</a>
+  <a href="a-propos.html">À propos</a>
+  <a href="contact.html" class="btn btn-primary">Prendre rendez-vous</a>
+</nav>
+
+<main id="main">
+  <section class="page-head">
+    <div class="container">
+      <nav class="crumbs" aria-label="Fil d'Ariane">
+        <a href="index.html">Accueil</a><i class="ph ph-caret-right" aria-hidden="true"></i><span>Programmes</span>
+      </nav>
+      <span class="eyebrow">Catalogue national</span>
+      <h1>Programmes neufs disponibles</h1>
+      <p class="lede">Une sélection représentative de notre catalogue. Nos conseillers accèdent en direct aux stocks complets des promoteurs, y compris aux lots non diffusés publiquement.</p>
+    </div>
+  </section>
+
+  <section class="section--tight" style="padding-top: 32px;">
+    <div class="container">
+
+      <form class="filters-bar" onsubmit="return false;">
+        <div class="field" style="margin-bottom:0;">
+          <label for="f-search">Ville ou programme</label>
+          <input class="input" type="search" id="f-search" data-filter-search placeholder="Lyon, Le Belvédère...">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="f-region">Région</label>
+          <select class="input" id="f-region" data-filter-region>
+            <option value="">Toutes les régions</option>
+            <option value="ile-de-france">Île-de-France</option>
+            <option value="auvergne-rhone-alpes">Auvergne-Rhône-Alpes</option>
+            <option value="provence-alpes-cote-dazur">Provence-Alpes-Côte d'Azur</option>
+            <option value="nouvelle-aquitaine">Nouvelle-Aquitaine</option>
+            <option value="occitanie">Occitanie</option>
+            <option value="pays-de-la-loire">Pays de la Loire</option>
+            <option value="bretagne">Bretagne</option>
+            <option value="hauts-de-france">Hauts-de-France</option>
+            <option value="grand-est">Grand Est</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="f-type">Type de bien</label>
+          <select class="input" id="f-type" data-filter-type>
+            <option value="">Tous les types</option>
+            <option value="appartement">Appartement</option>
+            <option value="maison">Maison</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="f-budget">Budget</label>
+          <select class="input" id="f-budget" data-filter-budget>
+            <option value="">Tous les budgets</option>
+            <option value="300">Jusqu'à 300 000 €</option>
+            <option value="300-400">300 000 à 400 000 €</option>
+            <option value="400-500">400 000 à 500 000 €</option>
+            <option value="500">Plus de 500 000 €</option>
+          </select>
+        </div>
+        <button type="button" class="btn btn-outline" data-filter-reset>Réinitialiser</button>
+      </form>
+
+      <div class="results-bar">
+        <p class="count" data-results-count><strong>12</strong> programmes trouvés</p>
+        <div class="sort-select">
+          <label for="f-sort">Trier par</label>
+          <select class="input btn-sm" id="f-sort" data-filter-sort style="width:auto;padding:9px 34px 9px 14px;">
+            <option value="pertinence">Pertinence</option>
+            <option value="price-asc">Prix croissant</option>
+            <option value="price-desc">Prix décroissant</option>
+            <option value="delivery">Livraison la plus proche</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-3" data-programmes-grid></div>
+
+      <div class="empty-state" data-empty-state style="display:none;">
+        <div class="ico"><i class="ph ph-magnifying-glass" aria-hidden="true"></i></div>
+        <h3>Aucun programme ne correspond à ces critères</h3>
+        <p>Élargissez votre recherche, ou laissez un conseiller chercher pour vous dans le stock complet des promoteurs.</p>
+        <a href="contact.html" class="btn btn-primary">Prendre rendez-vous</a>
+      </div>
+
+      <div class="result-note" style="margin-top:44px;">
+        <i class="ph ph-info" aria-hidden="true"></i>
+        <span>Ce catalogue présente un échantillon de programmes à titre d'illustration. Les disponibilités, surfaces et prix évoluent quotidiennement : un conseiller vous confirme les lots réellement disponibles lors de votre rendez-vous.</span>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="section--tight" style="padding-bottom: 96px;">
+    <div class="container">
+      <div class="cta-banner" data-reveal>
+        <h2>Vous ne trouvez pas votre ville ?</h2>
+        <p>Notre réseau couvre l'ensemble du territoire, y compris les villes moyennes et les promoteurs régionaux.</p>
+        <a href="contact.html" class="btn btn-primary">Prendre rendez-vous</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="brand" aria-label="Vefalys, retour à l'accueil"><img src="assets/img/vefalys.png" alt="Vefalys" width="309" height="45"></a>
+        <p>Courtier en immobilier neuf. Tous les programmes de France, au prix direct promoteur.</p>
+        <div class="footer-social">
+          <a href="https://www.linkedin.com" aria-label="LinkedIn" rel="noopener"><i class="ph ph-linkedin-logo" aria-hidden="true"></i></a>
+          <a href="https://www.instagram.com" aria-label="Instagram" rel="noopener"><i class="ph ph-instagram-logo" aria-hidden="true"></i></a>
+          <a href="mailto:contact@vefalys.fr" aria-label="Envoyer un e-mail"><i class="ph ph-envelope-simple" aria-hidden="true"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Explorer</h4>
+        <ul>
+          <li><a href="programmes.html">Programmes neufs</a></li>
+          <li><a href="services.html">Nos services</a></li>
+          <li><a href="financement.html">Simulateur de budget</a></li>
+          <li><a href="avis.html">Avis clients</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>À savoir</h4>
+        <ul>
+          <li><a href="faq.html">Questions fréquentes</a></li>
+          <li><a href="a-propos.html">Qui sommes-nous</a></li>
+          <li><a href="faq.html#financement">Prêt à taux zéro</a></li>
+          <li><a href="faq.html#juridique">Contrat VEFA</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:contact@vefalys.fr">contact@vefalys.fr</a></li>
+          <li><a href="tel:+33669215665">+33 6 69 21 56 65</a></li>
+          <li><a href="contact.html">Prendre rendez-vous</a></li>
+          <li><span style="font-size:14.5px;color:var(--ink-soft)">Lun au ven, 9h à 20h</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>Droit d'auteur &copy; <span data-year>2026</span> Vefalys. Tous droits réservés.</span>
+      <div class="legal-links">
+        <a href="mentions-legales.html">Mentions légales</a>
+        <a href="confidentialite.html">Confidentialité</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+<script src="assets/js/programmes-data.js"></script>
+<script src="assets/js/programmes.js"></script>
+</body>
+</html>

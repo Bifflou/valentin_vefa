@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulateur de budget immobilier | Vefalys</title>
+<meta name="description" content="Calculez votre capacité d'emprunt, vos mensualités, vos frais de notaire et votre éligibilité au prêt à taux zéro en cinq étapes. Simulation gratuite et sans engagement.">
+<link rel="canonical" href="https://vefalys.fr/financement.html">
+<meta property="og:title" content="Simulateur de budget immobilier | Vefalys">
+<meta property="og:description" content="Capacité d'emprunt, mensualités, frais de notaire et PTZ : votre budget en cinq étapes.">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Aller au contenu</a>
+<div id="header-sentinel"></div>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand" aria-label="Vefalys, retour à l'accueil"><img src="assets/img/vefalys.png" alt="Vefalys" width="309" height="45"></a>
+    <nav class="main-nav" aria-label="Navigation principale">
+      <a href="programmes.html" data-nav-link>Programmes</a>
+      <a href="services.html" data-nav-link>Nos services</a>
+      <a href="financement.html" data-nav-link>Financement</a>
+      <a href="avis.html" data-nav-link>Avis</a>
+      <a href="faq.html" data-nav-link>FAQ</a>
+      <a href="a-propos.html" data-nav-link>À propos</a>
+    </nav>
+    <div class="header-actions">
+      <button class="theme-toggle" data-theme-toggle aria-label="Basculer le thème clair ou sombre">
+        <i class="ph ph-sun" aria-hidden="true"></i><i class="ph ph-moon" aria-hidden="true"></i>
+      </button>
+      <a href="contact.html" class="btn btn-primary btn-sm">Prendre rendez-vous</a>
+      <button class="nav-toggle" data-nav-toggle aria-label="Ouvrir le menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<nav class="mobile-nav" data-mobile-nav aria-label="Navigation mobile">
+  <a href="programmes.html">Programmes</a>
+  <a href="services.html">Nos services</a>
+  <a href="financement.html">Financement</a>
+  <a href="avis.html">Avis clients</a>
+  <a href="faq.html">FAQ</a>
+  <a href="a-propos.html">À propos</a>
+  <a href="contact.html" class="btn btn-primary">Prendre rendez-vous</a>
+</nav>
+
+<main id="main">
+  <section class="page-head" id="simulateur">
+    <div class="container">
+      <nav class="crumbs" aria-label="Fil d'Ariane">
+        <a href="index.html">Accueil</a><i class="ph ph-caret-right" aria-hidden="true"></i><span>Financement</span>
+      </nav>
+      <div class="section-head" style="margin-bottom:0;">
+        <span class="eyebrow">Votre financement</span>
+        <h1>Combien pouvez-vous acheter&#8239;?</h1>
+        <p class="lede">Cinq étapes pour connaître votre capacité d'emprunt, vos mensualités, vos frais de notaire et votre éligibilité au prêt à taux zéro.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section--tight" style="padding-top: 32px;">
+    <div class="container">
+      <form class="sim-wrap" data-simulator onsubmit="return false;">
+
+        <div class="sim-progress" aria-hidden="true">
+          <div class="bar"><span></span></div>
+          <div class="bar"><span></span></div>
+          <div class="bar"><span></span></div>
+          <div class="bar"><span></span></div>
+          <div class="bar"><span></span></div>
+        </div>
+
+        <!-- Étape 1 -->
+        <div class="sim-panel is-active">
+          <p class="sim-step-label">Étape 1 sur 5</p>
+          <h2>Votre projet immobilier</h2>
+          <p>Dites-nous ce que vous cherchez à financer.</p>
+
+          <p class="group-label" id="lbl-objectif">Quel est votre objectif ?</p>
+          <div class="tile-group" role="radiogroup" aria-labelledby="lbl-objectif">
+            <label class="tile">
+              <input type="radio" name="objectif" value="principale" checked>
+              <span class="ico"><i class="ph ph-house-line" aria-hidden="true"></i></span>
+              <strong>Résidence principale</strong>
+              <span>J'y habiterai</span>
+            </label>
+            <label class="tile">
+              <input type="radio" name="objectif" value="locatif">
+              <span class="ico"><i class="ph ph-key" aria-hidden="true"></i></span>
+              <strong>Investissement locatif</strong>
+              <span>Je le mettrai en location</span>
+            </label>
+            <label class="tile">
+              <input type="radio" name="objectif" value="secondaire">
+              <span class="ico"><i class="ph ph-sun-horizon" aria-hidden="true"></i></span>
+              <strong>Résidence secondaire</strong>
+              <span>Pour les vacances</span>
+            </label>
+          </div>
+
+          <div class="sim-nav">
+            <span></span>
+            <button type="button" class="btn btn-primary" data-sim-next>Continuer</button>
+          </div>
+        </div>
+
+        <!-- Étape 2 -->
+        <div class="sim-panel">
+          <p class="sim-step-label">Étape 2 sur 5</p>
+          <h2>Le type de bien</h2>
+          <p>Le type de bien détermine vos frais de notaire et votre accès au prêt à taux zéro.</p>
+
+          <p class="group-label" id="lbl-bien">Quel bien visez-vous ?</p>
+          <div class="tile-group tile-2" role="radiogroup" aria-labelledby="lbl-bien">
+            <label class="tile">
+              <input type="radio" name="bien" value="appartement-neuf" checked>
+              <span class="ico"><i class="ph ph-buildings" aria-hidden="true"></i></span>
+              <strong>Appartement neuf</strong>
+              <span>Ou achat en VEFA</span>
+            </label>
+            <label class="tile">
+              <input type="radio" name="bien" value="maison-neuve">
+              <span class="ico"><i class="ph ph-house" aria-hidden="true"></i></span>
+              <strong>Maison neuve</strong>
+              <span>Individuelle ou en bande</span>
+            </label>
+            <label class="tile">
+              <input type="radio" name="bien" value="ancien-travaux">
+              <span class="ico"><i class="ph ph-hammer" aria-hidden="true"></i></span>
+              <strong>Ancien avec travaux</strong>
+              <span>Travaux supérieurs à 25 % du prix</span>
+            </label>
+            <label class="tile">
+              <input type="radio" name="bien" value="ancien">
+              <span class="ico"><i class="ph ph-building-apartment" aria-hidden="true"></i></span>
+              <strong>Ancien sans travaux</strong>
+              <span>Bien habitable en l'état</span>
+            </label>
+          </div>
+
+          <p class="group-label" id="lbl-primo" style="margin-top:30px;">Êtes-vous primo-accédant ?</p>
+          <div class="tile-group tile-2" role="radiogroup" aria-labelledby="lbl-primo">
+            <label class="tile">
+              <input type="radio" name="primo" value="oui" checked>
+              <strong>Oui, je suis primo-accédant</strong>
+              <span>Je n'ai pas été propriétaire de ma résidence principale ces deux dernières années</span>
+            </label>
+            <label class="tile">
+              <input type="radio" name="primo" value="non">
+              <strong>Non</strong>
+              <span>Je suis ou j'ai été propriétaire récemment</span>
+            </label>
+          </div>
+
+          <div class="sim-nav">
+            <button type="button" class="btn btn-outline" data-sim-prev>Retour</button>
+            <button type="button" class="btn btn-primary" data-sim-next>Continuer</button>
+          </div>
+        </div>
+
+        <!-- Étape 3 -->
+        <div class="sim-panel">
+          <p class="sim-step-label">Étape 3 sur 5</p>
+          <h2>Vos revenus</h2>
+          <p>Les banques limitent en général l'endettement à 35 % des revenus nets, assurance comprise.</p>
+
+          <div class="field">
+            <label for="revenus">Revenus nets mensuels du foyer (€)</label>
+            <input class="input" type="number" id="revenus" name="revenus" min="0" step="50" placeholder="4200" inputmode="numeric" required>
+            <span class="hint">Salaires nets avant impôt. Ajoutez 70 % des loyers déjà perçus si vous êtes bailleur.</span>
+            <span class="error-msg"><i class="ph ph-warning-circle" aria-hidden="true"></i>Indiquez un montant de revenus pour continuer.</span>
+          </div>
+
+          <div class="field">
+            <label for="charges">Mensualités de crédits en cours (€)</label>
+            <input class="input" type="number" id="charges" name="charges" min="0" step="10" placeholder="0" inputmode="numeric">
+            <span class="hint">Crédit auto, prêt personnel, autre crédit immobilier. Laissez à zéro si vous n'en avez aucun.</span>
+          </div>
+
+          <div class="sim-nav">
+            <button type="button" class="btn btn-outline" data-sim-prev>Retour</button>
+            <button type="button" class="btn btn-primary" data-sim-next>Continuer</button>
+          </div>
+        </div>
+
+        <!-- Étape 4 -->
+        <div class="sim-panel">
+          <p class="sim-step-label">Étape 4 sur 5</p>
+          <h2>Apport et durée</h2>
+          <p>Votre apport couvre en priorité les frais de notaire et les frais de dossier.</p>
+
+          <div class="field">
+            <label for="apport">Apport personnel disponible (€)</label>
+            <input class="input" type="number" id="apport" name="apport" min="0" step="500" placeholder="30000" inputmode="numeric" required>
+            <span class="hint">Épargne mobilisable, épargne salariale, donation familiale.</span>
+            <span class="error-msg"><i class="ph ph-warning-circle" aria-hidden="true"></i>Indiquez votre apport, même s'il est faible.</span>
+          </div>
+
+          <p class="group-label" id="lbl-duree" style="margin-top:26px;">Durée de prêt souhaitée</p>
+          <div class="tile-group" role="radiogroup" aria-labelledby="lbl-duree">
+            <label class="tile">
+              <input type="radio" name="duree" value="15">
+              <strong>15 ans</strong>
+              <span>Mensualité élevée, intérêts réduits</span>
+            </label>
+            <label class="tile">
+              <input type="radio" name="duree" value="20" checked>
+              <strong>20 ans</strong>
+              <span>L'équilibre le plus courant</span>
+            </label>
+            <label class="tile">
+              <input type="radio" name="duree" value="25">
+              <strong>25 ans</strong>
+              <span>Capacité maximale, coût plus élevé</span>
+            </label>
+          </div>
+
+          <div class="sim-nav">
+            <button type="button" class="btn btn-outline" data-sim-prev>Retour</button>
+            <button type="button" class="btn btn-primary" data-sim-next>Voir mon budget</button>
+          </div>
+        </div>
+
+        <!-- Résultats -->
+        <div class="sim-panel">
+          <p class="sim-step-label">Résultat de votre simulation</p>
+
+          <div class="result-hero">
+            <span class="label">Budget d'acquisition estimé</span>
+            <div class="amount" data-result="budget">0 €</div>
+            <p class="sub">Prix du bien finançable avec vos frais de notaire, hors mobilier et hors stationnement.</p>
+          </div>
+
+          <div class="result-grid">
+            <div class="result-card">
+              <div class="k">Capacité d'emprunt</div>
+              <div class="v" data-result="capacite">0 €</div>
+              <p class="d">Montant finançable par la banque.</p>
+            </div>
+            <div class="result-card">
+              <div class="k">Mensualité maximale</div>
+              <div class="v" data-result="mensualite">0 €</div>
+              <p class="d">Assurance emprunteur comprise.</p>
+            </div>
+            <div class="result-card">
+              <div class="k">Apport mobilisé</div>
+              <div class="v" data-result="apport-recap">0 €</div>
+              <p class="d">Ce que vous injectez au départ.</p>
+            </div>
+          </div>
+
+          <div class="result-grid">
+            <div class="result-card">
+              <div class="k">Frais de notaire estimés</div>
+              <div class="v" data-result="notaire">0 €</div>
+              <p class="d">2,5 % dans le neuf, 7,5 % dans l'ancien.</p>
+            </div>
+            <div class="result-card">
+              <div class="k">Coût total des intérêts</div>
+              <div class="v" data-result="interets">0 €</div>
+              <p class="d">Sur toute la durée du prêt.</p>
+            </div>
+            <div class="result-card">
+              <div class="k">Taux indicatif retenu</div>
+              <div class="v" data-result="taux">0 %</div>
+              <p class="d">Sur <span data-result="duree-recap">20 ans</span>.</p>
+            </div>
+          </div>
+
+          <div class="result-card" data-ptz-block style="margin-bottom:24px;border-color:var(--accent);">
+            <div class="k" style="color:var(--accent);">Prêt à taux zéro estimé</div>
+            <div class="v" data-result="ptz">0 €</div>
+            <p class="d">Vous semblez éligible au PTZ, qui viendrait s'ajouter au budget ci-dessus. Le montant définitif dépend de la zone du programme, de vos revenus et de la composition du foyer : votre conseiller le calcule précisément avec vous.</p>
+          </div>
+
+          <div class="result-note" data-ptz-ko>
+            <i class="ph ph-info" aria-hidden="true"></i>
+            <span>Le prêt à taux zéro n'a pas été intégré à ce calcul : il est réservé aux primo-accédants qui achètent leur résidence principale dans le neuf. D'autres dispositifs peuvent s'appliquer à votre situation.</span>
+          </div>
+
+          <div class="result-note">
+            <i class="ph ph-info" aria-hidden="true"></i>
+            <span>Simulation indicative calculée avec un taux d'endettement de <span data-result="endettement">35 %</span> et un taux de marché estimé. Elle ne constitue ni une offre de prêt, ni un conseil en investissement. Seule une banque peut valider votre financement.</span>
+          </div>
+
+          <div class="sim-nav">
+            <button type="button" class="btn btn-outline" data-sim-restart>Refaire la simulation</button>
+            <a href="contact.html" class="btn btn-primary">Prendre rendez-vous</a>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </section>
+
+  <!-- Dispositifs -->
+  <section class="section" style="background: var(--bg-dim);">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <h2 class="h-section">Les dispositifs que nous étudions pour vous</h2>
+        <p class="lede">Selon votre projet, plusieurs leviers peuvent réduire le coût réel de votre acquisition.</p>
+      </div>
+      <div class="grid grid-3" data-reveal-group>
+        <article class="card value-card">
+          <span class="ico"><i class="ph ph-percent" aria-hidden="true"></i></span>
+          <h3>Prêt à taux zéro</h3>
+          <p>Réservé aux primo-accédants dans le neuf, il finance une part de votre achat sans aucun intérêt. Le montant dépend de la zone et de vos revenus.</p>
+        </article>
+        <article class="card value-card">
+          <span class="ico"><i class="ph ph-key" aria-hidden="true"></i></span>
+          <h3>Location meublée (LMNP)</h3>
+          <p>Pour un investissement locatif, l'amortissement du bien permet souvent de neutraliser la fiscalité des loyers pendant plusieurs années.</p>
+        </article>
+        <article class="card value-card">
+          <span class="ico"><i class="ph ph-buildings" aria-hidden="true"></i></span>
+          <h3>Prêt Action Logement</h3>
+          <p>Si votre employeur cotise, un prêt complémentaire à taux réduit peut compléter votre plan de financement.</p>
+        </article>
+      </div>
+      <p style="font-size:14px;color:var(--ink-faint);margin-top:26px;max-width:70ch;">
+        Vefalys n'est pas courtier en crédit : nous préparons votre dossier et vous mettons en relation avec des partenaires bancaires et des courtiers agréés qui négocient vos conditions.
+      </p>
+    </div>
+  </section>
+
+  <section class="section--tight" style="padding-bottom: 96px;">
+    <div class="container">
+      <div class="cta-banner" data-reveal>
+        <h2>Faites valider votre plan de financement</h2>
+        <p>Un conseiller reprend votre simulation avec vous et l'ajuste à votre situation réelle.</p>
+        <a href="contact.html" class="btn btn-primary">Prendre rendez-vous</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="brand" aria-label="Vefalys, retour à l'accueil"><img src="assets/img/vefalys.png" alt="Vefalys" width="309" height="45"></a>
+        <p>Courtier en immobilier neuf. Tous les programmes de France, au prix direct promoteur.</p>
+        <div class="footer-social">
+          <a href="https://www.linkedin.com" aria-label="LinkedIn" rel="noopener"><i class="ph ph-linkedin-logo" aria-hidden="true"></i></a>
+          <a href="https://www.instagram.com" aria-label="Instagram" rel="noopener"><i class="ph ph-instagram-logo" aria-hidden="true"></i></a>
+          <a href="mailto:contact@vefalys.fr" aria-label="Envoyer un e-mail"><i class="ph ph-envelope-simple" aria-hidden="true"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Explorer</h4>
+        <ul>
+          <li><a href="programmes.html">Programmes neufs</a></li>
+          <li><a href="services.html">Nos services</a></li>
+          <li><a href="financement.html">Simulateur de budget</a></li>
+          <li><a href="avis.html">Avis clients</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>À savoir</h4>
+        <ul>
+          <li><a href="faq.html">Questions fréquentes</a></li>
+          <li><a href="a-propos.html">Qui sommes-nous</a></li>
+          <li><a href="faq.html#financement">Prêt à taux zéro</a></li>
+          <li><a href="faq.html#juridique">Contrat VEFA</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:contact@vefalys.fr">contact@vefalys.fr</a></li>
+          <li><a href="tel:+33669215665">+33 6 69 21 56 65</a></li>
+          <li><a href="contact.html">Prendre rendez-vous</a></li>
+          <li><span style="font-size:14.5px;color:var(--ink-soft)">Lun au ven, 9h à 20h</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>Droit d'auteur &copy; <span data-year>2026</span> Vefalys. Tous droits réservés.</span>
+      <div class="legal-links">
+        <a href="mentions-legales.html">Mentions légales</a>
+        <a href="confidentialite.html">Confidentialité</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+<script src="assets/js/simulateur.js"></script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fiche programme | Vefalys</title>
+<meta name="description" content="Détail d'un programme immobilier neuf : typologies, surfaces, prix promoteur, livraison et localisation.">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://images.unsplash.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Aller au contenu</a>
+<div id="header-sentinel"></div>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand" aria-label="Vefalys, retour à l'accueil"><img src="assets/img/vefalys.png" alt="Vefalys" width="309" height="45"></a>
+    <nav class="main-nav" aria-label="Navigation principale">
+      <a href="programmes.html" data-nav-link>Programmes</a>
+      <a href="services.html" data-nav-link>Nos services</a>
+      <a href="financement.html" data-nav-link>Financement</a>
+      <a href="avis.html" data-nav-link>Avis</a>
+      <a href="faq.html" data-nav-link>FAQ</a>
+      <a href="a-propos.html" data-nav-link>À propos</a>
+    </nav>
+    <div class="header-actions">
+      <button class="theme-toggle" data-theme-toggle aria-label="Basculer le thème clair ou sombre">
+        <i class="ph ph-sun" aria-hidden="true"></i><i class="ph ph-moon" aria-hidden="true"></i>
+      </button>
+      <a href="contact.html" class="btn btn-primary btn-sm">Prendre rendez-vous</a>
+      <button class="nav-toggle" data-nav-toggle aria-label="Ouvrir le menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<nav class="mobile-nav" data-mobile-nav aria-label="Navigation mobile">
+  <a href="programmes.html">Programmes</a>
+  <a href="services.html">Nos services</a>
+  <a href="financement.html">Financement</a>
+  <a href="avis.html">Avis clients</a>
+  <a href="faq.html">FAQ</a>
+  <a href="a-propos.html">À propos</a>
+  <a href="contact.html" class="btn btn-primary">Prendre rendez-vous</a>
+</nav>
+
+<main id="main">
+  <section class="page-head" style="padding-bottom:0;">
+    <div class="container">
+      <nav class="crumbs" aria-label="Fil d'Ariane">
+        <a href="index.html">Accueil</a><i class="ph ph-caret-right" aria-hidden="true"></i>
+        <a href="programmes.html">Programmes</a><i class="ph ph-caret-right" aria-hidden="true"></i>
+        <span data-crumb-name>Fiche programme</span>
+      </nav>
+    </div>
+  </section>
+
+  <section class="section--tight" style="padding-top:20px;">
+    <div class="container">
+      <div data-programme-detail></div>
+
+      <div class="empty-state" data-programme-missing style="display:none;">
+        <div class="ico"><i class="ph ph-compass" aria-hidden="true"></i></div>
+        <h3>Ce programme n'est plus référencé</h3>
+        <p>Il a peut-être été commercialisé en totalité. Parcourez le catalogue ou laissez un conseiller chercher l'équivalent pour vous.</p>
+        <a href="programmes.html" class="btn btn-primary">Explorer le catalogue</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="background: var(--bg-dim);">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <h2 class="h-section">Programmes comparables</h2>
+        <p class="lede">D'autres opportunités dans la même région ou dans la même gamme de prix.</p>
+      </div>
+      <div class="grid grid-3" data-similar-grid></div>
+    </div>
+  </section>
+
+  <section class="section--tight" style="padding-bottom: 96px;">
+    <div class="container">
+      <div class="cta-banner" data-reveal>
+        <h2>Réservez votre rendez-vous de comparaison</h2>
+        <p>Nous préparons un comparatif chiffré de vos programmes avant même de vous rencontrer.</p>
+        <a href="contact.html" class="btn btn-primary">Prendre rendez-vous</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="brand" aria-label="Vefalys, retour à l'accueil"><img src="assets/img/vefalys.png" alt="Vefalys" width="309" height="45"></a>
+        <p>Courtier en immobilier neuf. Tous les programmes de France, au prix direct promoteur.</p>
+        <div class="footer-social">
+          <a href="https://www.linkedin.com" aria-label="LinkedIn" rel="noopener"><i class="ph ph-linkedin-logo" aria-hidden="true"></i></a>
+          <a href="https://www.instagram.com" aria-label="Instagram" rel="noopener"><i class="ph ph-instagram-logo" aria-hidden="true"></i></a>
+          <a href="mailto:contact@vefalys.fr" aria-label="Envoyer un e-mail"><i class="ph ph-envelope-simple" aria-hidden="true"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Explorer</h4>
+        <ul>
+          <li><a href="programmes.html">Programmes neufs</a></li>
+          <li><a href="services.html">Nos services</a></li>
+          <li><a href="financement.html">Simulateur de budget</a></li>
+          <li><a href="avis.html">Avis clients</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>À savoir</h4>
+        <ul>
+          <li><a href="faq.html">Questions fréquentes</a></li>
+          <li><a href="a-propos.html">Qui sommes-nous</a></li>
+          <li><a href="faq.html#financement">Prêt à taux zéro</a></li>
+          <li><a href="faq.html#juridique">Contrat VEFA</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:contact@vefalys.fr">contact@vefalys.fr</a></li>
+          <li><a href="tel:+33669215665">+33 6 69 21 56 65</a></li>
+          <li><a href="contact.html">Prendre rendez-vous</a></li>
+          <li><span style="font-size:14.5px;color:var(--ink-soft)">Lun au ven, 9h à 20h</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>Droit d'auteur &copy; <span data-year>2026</span> Vefalys. Tous droits réservés.</span>
+      <div class="legal-links">
+        <a href="mentions-legales.html">Mentions légales</a>
+        <a href="confidentialite.html">Confidentialité</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+<script src="assets/js/programmes-data.js"></script>
+<script src="assets/js/programme-detail.js"></script>
+</body>
+</html>
