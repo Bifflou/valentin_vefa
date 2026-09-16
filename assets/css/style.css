@@ -533,7 +533,8 @@ p.lede {
 .team-card p { font-size: 14.5px; color: var(--ink-soft); }
 
 .testimonial-card { padding: 28px 26px; display: flex; flex-direction: column; gap: 18px; }
-.testimonial-card .stars { display: flex; gap: 3px; color: var(--amber); font-size: 15px; }
+.testimonial-card .stars { display: flex; gap: 3px; color: var(--amber); font-size: 16px; }
+.stars .is-empty { color: var(--line-strong); }
 .testimonial-card blockquote { font-size: 15.5px; color: var(--ink); line-height: 1.6; }
 .testimonial-card .who { display: flex; align-items: center; gap: 12px; margin-top: auto; }
 .testimonial-card .who .avatar {
@@ -608,7 +609,12 @@ p.lede {
 /* ---------- Forms ---------- */
 .field { display: grid; gap: 8px; margin-bottom: 20px; }
 .field label { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.field .label-opt { font-weight: 500; color: var(--ink-faint); }
 .field .hint { font-size: 12.5px; color: var(--ink-faint); }
+/* Les colonnes d'une ligne de formulaire alignent leurs champs par le haut,
+   pour qu'un champ sans aide n'etire pas la ligne. */
+.row-2 > .field { align-content: start; margin-bottom: 0; }
+.row-2 { margin-bottom: 20px; }
 .field .error-msg { font-size: 12.5px; color: var(--error); display: none; align-items: center; gap: 5px; }
 .field.has-error .error-msg { display: flex; }
 .field.has-error input, .field.has-error select, .field.has-error textarea { border-color: var(--error); }
