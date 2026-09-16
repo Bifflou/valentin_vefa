@@ -129,45 +129,6 @@
       counters.forEach(function (el) { countObserver.observe(el); });
     }
 
-    /* ---------- Favourites (heart) ---------- */
-    var FAV_KEY = "vefalys-favorites";
-    function getFavs() {
-      try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch (e) { return []; }
-    }
-    function setFavs(list) {
-      try { localStorage.setItem(FAV_KEY, JSON.stringify(list)); } catch (e) {}
-    }
-    var favs = getFavs();
-    document.querySelectorAll("[data-fav]").forEach(function (btn) {
-      var id = btn.getAttribute("data-fav");
-      if (favs.indexOf(id) > -1) btn.classList.add("is-active");
-      btn.addEventListener("click", function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        var list = getFavs();
-        var idx = list.indexOf(id);
-        if (idx > -1) { list.splice(idx, 1); btn.classList.remove("is-active"); }
-        else { list.push(id); btn.classList.add("is-active"); }
-        setFavs(list);
-      });
-    });
-
-    /* ---------- Contact: préremplissage depuis ?programme= ---------- */
-    var programmeParam = new URLSearchParams(window.location.search).get("programme");
-    if (programmeParam) {
-      var messageField = document.querySelector('form[data-validate] [name="message"]');
-      var sujetField = document.querySelector('form[data-validate] [name="sujet"]');
-      if (messageField && !messageField.value) {
-        messageField.value = "Bonjour, je souhaite des informations sur le programme " + programmeParam + ".";
-      }
-      if (sujetField) sujetField.value = "achat-neuf";
-      var notice = document.querySelector("[data-programme-notice]");
-      if (notice) {
-        notice.querySelector("[data-programme-name]").textContent = programmeParam;
-        notice.style.display = "flex";
-      }
-    }
-
     /* ---------- FAQ: filtres par catégorie ---------- */
     var faqChips = document.querySelectorAll("[data-faq-cat]");
     var faqItems = document.querySelectorAll("[data-faq-item]");
