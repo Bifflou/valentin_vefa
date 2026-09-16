@@ -48,6 +48,28 @@
     }
   };
 
+  /* ---------- Zonage ABC ----------
+     Table nationale chargée depuis zonage-abc.js : codes INSEE concaténés
+     par zone, tout ce qui n'y figure pas relève de la zone C. */
+  var ZONE_LABELS = { Abis: "A bis", A: "A", B1: "B1", B2: "B2", C: "C" };
+  var indexZones = null;
+  function zoneDeCommune(insee) {
+    var data = window.VEFALYS_ZONAGE;
+    if (!data) return null;
+    if (!indexZones) {
+      indexZones = {};
+      Object.keys(data.communes).forEach(function (zone) {
+        var blob = data.communes[zone];
+        for (var i = 0; i < blob.length; i += 5) indexZones[blob.substr(i, 5)] = zone;
+      });
+    }
+    return indexZones[insee] || data.defaut;
+  }
+  /* Le barème du PTZ ne distingue pas A bis de A. */
+  function zoneBareme(zone) {
+    return zone === "Abis" ? "A" : zone;
+  }
+
   /* Renvoie le PTZ estimé, ou le motif de non-éligibilité. */
   function estimatePtz(opts) {
     var pers = Math.min(Math.max(opts.personnes, 1), 8);
@@ -213,6 +235,82 @@
         state[select.name] = select.name === "personnes" ? parseInt(select.value, 10) : select.value;
       });
     });
+
+    /* ---------- Code postal, commune, puis zone ---------- */
+    var cpInput = form.querySelector("[data-code-postal]");
+    var cpHint = form.querySelector("[data-cp-hint]");
+    var communeRow = form.querySelector("[data-commune-row]");
+    var communeSelect = form.querySelector("[data-commune]");
+    var zoneAffichee = form.querySelector("[data-zone-affichee]");
+    var zoneSelect = form.querySelector('select[name="zone"]');
+    var zoneManuelChamp = form.querySelector("[data-zone-manuel-champ]");
+    var boutonManuel = form.querySelector("[data-zone-manuel]");
+    var CP_HINT_DEFAUT = cpHint ? cpHint.textContent : "";
+
+    if (boutonManuel && zoneManuelChamp) {
+      boutonManuel.addEventListener("click", function () {
+        zoneManuelChamp.style.display = "";
+        zoneSelect.focus();
+      });
+    }
+
+    /* La zone retenue passe par le select : l'état reste piloté par un seul élément. */
+    function appliquerZone(zone) {
+      if (!zoneSelect) return;
+      zoneSelect.value = zoneBareme(zone);
+      state.zone = zoneSelect.value;
+      if (zoneAffichee) {
+        zoneAffichee.textContent = "Zone " + ZONE_LABELS[zone];
+      }
+    }
+
+    function afficherCommunes(communes) {
+      communeSelect.innerHTML = communes.map(function (c) {
+        return '<option value="' + c.code + '">' + c.nom + "</option>";
+      }).join("");
+      communeRow.style.display = "";
+      appliquerZone(zoneDeCommune(communes[0].code));
+    }
+
+    if (cpInput && communeSelect) {
+      var requeteEnCours = 0;
+      cpInput.addEventListener("input", function () {
+        var cp = cpInput.value.replace(/\D/g, "").slice(0, 5);
+        if (cpInput.value !== cp) cpInput.value = cp;
+        if (cp.length < 5) {
+          communeRow.style.display = "none";
+          if (cpHint) cpHint.textContent = CP_HINT_DEFAUT;
+          return;
+        }
+        var jeton = ++requeteEnCours;
+        if (cpHint) cpHint.textContent = "Recherche des communes...";
+        fetch("https://geo.api.gouv.fr/communes?codePostal=" + cp + "&fields=nom,code")
+          .then(function (r) { return r.ok ? r.json() : []; })
+          .then(function (communes) {
+            if (jeton !== requeteEnCours) return; /* une saisie plus récente a pris le relais */
+            if (!communes.length) {
+              communeRow.style.display = "none";
+              if (cpHint) cpHint.textContent = "Code postal inconnu. Indiquez la zone à la main ci-dessous.";
+              if (zoneManuelChamp) zoneManuelChamp.style.display = "";
+              return;
+            }
+            communes.sort(function (a, b) { return a.nom.localeCompare(b.nom, "fr"); });
+            if (cpHint) cpHint.textContent = communes.length > 1
+              ? "Plusieurs communes partagent ce code postal : choisissez la bonne."
+              : CP_HINT_DEFAUT;
+            afficherCommunes(communes);
+          })
+          .catch(function () {
+            if (jeton !== requeteEnCours) return;
+            if (cpHint) cpHint.textContent = "Recherche indisponible. Indiquez la zone à la main ci-dessous.";
+            if (zoneManuelChamp) zoneManuelChamp.style.display = "";
+          });
+      });
+
+      communeSelect.addEventListener("change", function () {
+        appliquerZone(zoneDeCommune(communeSelect.value));
+      });
+    }
 
     /* ---------- Maths ---------- */
     function loanCapacity(monthly, annualRate, years) {

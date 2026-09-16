@@ -28,6 +28,10 @@ Site statique, sans build ni dépendance à installer : HTML, CSS et JavaScript 
   familial, tranches et quotités (distinctes pour l'habitat collectif et la maison
   individuelle), plafonnement par le montant des autres prêts. Les questions sur la
   composition du foyer et la zone n'apparaissent que lorsque le PTZ est possible.
+- **Zone déterminée par le code postal** : la saisie du code postal interroge
+  `geo.api.gouv.fr` pour lister les communes correspondantes, et la zone ABC est lue dans
+  la table nationale embarquée. Un code postal partagé par plusieurs communes de zones
+  différentes est traité correctement, et la zone reste corrigeable à la main.
 - **Estimation express** en page d'accueil, mise à jour en direct.
 - **FAQ filtrable** par thème, avec ouverture directe d'un thème par l'ancre de l'URL
   (`faq.html#financement`).
@@ -48,6 +52,7 @@ assets/
   css/style.css        design system complet (tokens, composants, thème sombre)
   js/main.js           thème, navigation, révélations, compteurs, FAQ, formulaire
   js/simulateur.js     estimation express et simulateur en cinq étapes
+  js/zonage-abc.js     zonage ABC des 34 875 communes (table générée, 32 Ko)
   img/vefalys.png      logo
   img/favicon.svg
 ```
@@ -80,6 +85,11 @@ npx serve .
    Le barème du PTZ, juste en dessous dans l'objet `PTZ`, cite les articles du code de la
    construction dont il est tiré : il est en vigueur jusqu'au 31 décembre 2027 et devra
    être revérifié à chaque révision du dispositif.
+7. **Zonage ABC** : `assets/js/zonage-abc.js` reprend la liste ministérielle en vigueur
+   depuis le 26 juin 2026 ([jeu de données](https://www.data.gouv.fr/datasets/liste-des-communes-selon-le-zonage-abc/)).
+   Chaque arrêté de reclassement la périme : régénérer la table depuis le CSV national,
+   en ne conservant que les communes des zones A bis, A, B1 et B2, la zone C étant la
+   valeur par défaut.
 6. **Fond de carte** : les tuiles viennent d'OpenStreetMap, sans clé. Sa politique
    d'usage vise un trafic modéré ; pour un site commercial à forte audience, passer à un
    fournisseur à clé (MapTiler, Mapbox) en remplaçant `TILE_URL` dans `assets/js/main.js`.

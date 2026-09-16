@@ -172,17 +172,38 @@
                 <span class="hint">Vous compris, quelle que soit la composition du foyer fiscal.</span>
               </div>
               <div class="field">
-                <label for="zone">Zone du logement</label>
-                <select class="input" id="zone" name="zone">
-                  <option value="A">Zone A et A bis</option>
-                  <option value="B1">Zone B1</option>
-                  <option value="B2">Zone B2</option>
-                  <option value="C">Zone C</option>
-                </select>
-                <span class="hint">Paris et l'Île-de-France en A, grandes agglomérations en B1, villes moyennes en B2, reste du territoire en C.
-                  <a href="https://www.service-public.fr/simulateur/calcul/zonage-abc" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600;">Vérifier ma zone</a>
+                <label for="code-postal">Code postal du logement recherché</label>
+                <input class="input" type="text" id="code-postal" inputmode="numeric" maxlength="5"
+                       pattern="[0-9]{5}" placeholder="75008" autocomplete="postal-code" data-code-postal>
+                <span class="hint" data-cp-hint>Cinq chiffres. Nous en déduisons la zone qui fixe le montant de votre prêt à taux zéro.</span>
+              </div>
+            </div>
+
+            <div class="row-2" data-commune-row style="display:none;">
+              <div class="field">
+                <label for="commune">Commune</label>
+                <select class="input" id="commune" data-commune></select>
+              </div>
+              <div class="field">
+                <span class="group-label" style="margin-bottom:8px;">Zone retenue</span>
+                <p class="zone-resolue" data-zone-affichee>&mdash;</p>
+                <span class="hint">
+                  <button type="button" class="lien-sobre" data-zone-manuel>Corriger la zone manuellement</button>
                 </span>
               </div>
+            </div>
+
+            <div class="field" data-zone-manuel-champ style="display:none;margin-top:6px;">
+              <label for="zone">Zone du logement</label>
+              <select class="input" id="zone" name="zone">
+                <option value="A">Zone A et A bis</option>
+                <option value="B1">Zone B1</option>
+                <option value="B2">Zone B2</option>
+                <option value="C">Zone C</option>
+              </select>
+              <span class="hint">En cas de doute,
+                <a href="https://www.service-public.fr/simulateur/calcul/zonage-abc" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600;">vérifiez la zone sur service-public.fr</a>.
+              </span>
             </div>
           </div>
 
@@ -427,6 +448,7 @@
 </footer>
 
 <script src="assets/js/main.js"></script>
+<script src="assets/js/zonage-abc.js"></script>
 <script src="assets/js/simulateur.js"></script>
 </body>
 </html>
