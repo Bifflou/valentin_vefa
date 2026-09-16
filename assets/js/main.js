@@ -96,7 +96,13 @@
       var suffix = el.getAttribute("data-suffix") || "";
       var prefix = el.getAttribute("data-prefix") || "";
       var duration = 1400;
-      var final = prefix + target.toFixed(decimals).replace(".", ",") + suffix;
+      function fr(value) {
+        return value.toLocaleString("fr-FR", {
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals
+        });
+      }
+      var final = prefix + fr(target) + suffix;
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.hidden) {
         el.textContent = final;
         return;
@@ -106,8 +112,7 @@
         if (start === null) start = ts;
         var progress = Math.min((ts - start) / duration, 1);
         var eased = 1 - Math.pow(1 - progress, 3);
-        var value = target * eased;
-        el.textContent = prefix + value.toFixed(decimals).replace(".", ",") + suffix;
+        el.textContent = prefix + fr(target * eased) + suffix;
         if (progress < 1) requestAnimationFrame(step);
       }
       requestAnimationFrame(step);

@@ -822,6 +822,16 @@ select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csv
   color: #fff;
   margin-bottom: auto;
 }
+.bento-cell--accent .big small {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.82);
+  margin-top: 6px;
+  margin-bottom: 14px;
+}
 
 /* ---------- Avis / rating ---------- */
 .rating-split {
