@@ -23,8 +23,11 @@ Site statique, sans build ni dépendance à installer : HTML, CSS et JavaScript 
 ## Fonctionnalités
 
 - **Simulateur de financement** : capacité d'emprunt calculée par la formule d'amortissement
-  réelle, plafond d'endettement à 35 % (règle HCSF), frais de notaire selon neuf ou ancien,
-  estimation du prêt à taux zéro selon l'éligibilité.
+  réelle, plafond d'endettement à 35 % (règle HCSF), frais de notaire selon neuf ou ancien.
+- **Prêt à taux zéro au barème officiel** : plafonds d'opération et de ressources, coefficient
+  familial, tranches et quotités (distinctes pour l'habitat collectif et la maison
+  individuelle), plafonnement par le montant des autres prêts. Les questions sur la
+  composition du foyer et la zone n'apparaissent que lorsque le PTZ est possible.
 - **Estimation express** en page d'accueil, mise à jour en direct.
 - **FAQ filtrable** par thème, avec ouverture directe d'un thème par l'ancre de l'URL
   (`faq.html#financement`).
@@ -74,6 +77,9 @@ npx serve .
    garantie financière, hébergeur) et faire relire par un conseil juridique.
 5. **Taux du simulateur** : les taux indicatifs sont définis dans `RATES`
    en haut de `assets/js/simulateur.js`, à actualiser selon le marché.
+   Le barème du PTZ, juste en dessous dans l'objet `PTZ`, cite les articles du code de la
+   construction dont il est tiré : il est en vigueur jusqu'au 31 décembre 2027 et devra
+   être revérifié à chaque révision du dispositif.
 6. **Fond de carte** : les tuiles viennent d'OpenStreetMap, sans clé. Sa politique
    d'usage vise un trafic modéré ; pour un site commercial à forte audience, passer à un
    fournisseur à clé (MapTiler, Mapbox) en remplaçant `TILE_URL` dans `assets/js/main.js`.

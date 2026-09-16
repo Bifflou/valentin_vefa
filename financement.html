@@ -154,6 +154,38 @@
             </label>
           </div>
 
+          <div data-ptz-fields>
+            <p class="group-label" style="margin-top:30px;">Pour chiffrer votre prêt à taux zéro</p>
+            <div class="row-2">
+              <div class="field">
+                <label for="personnes">Personnes qui occuperont le logement</label>
+                <select class="input" id="personnes" name="personnes">
+                  <option value="1">1 personne</option>
+                  <option value="2">2 personnes</option>
+                  <option value="3">3 personnes</option>
+                  <option value="4">4 personnes</option>
+                  <option value="5">5 personnes</option>
+                  <option value="6">6 personnes</option>
+                  <option value="7">7 personnes</option>
+                  <option value="8">8 personnes ou plus</option>
+                </select>
+                <span class="hint">Vous compris, quelle que soit la composition du foyer fiscal.</span>
+              </div>
+              <div class="field">
+                <label for="zone">Zone du logement</label>
+                <select class="input" id="zone" name="zone">
+                  <option value="A">Zone A et A bis</option>
+                  <option value="B1">Zone B1</option>
+                  <option value="B2">Zone B2</option>
+                  <option value="C">Zone C</option>
+                </select>
+                <span class="hint">Paris et l'Île-de-France en A, grandes agglomérations en B1, villes moyennes en B2, reste du territoire en C.
+                  <a href="https://www.service-public.fr/simulateur/calcul/zonage-abc" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600;">Vérifier ma zone</a>
+                </span>
+              </div>
+            </div>
+          </div>
+
           <div class="sim-nav">
             <button type="button" class="btn btn-outline" data-sim-prev>Retour</button>
             <button type="button" class="btn btn-primary" data-sim-next>Continuer</button>
@@ -272,17 +304,26 @@
           <div class="result-card" data-ptz-block style="margin-bottom:24px;border-color:var(--accent);">
             <div class="k" style="color:var(--accent);">Prêt à taux zéro estimé</div>
             <div class="v" data-result="ptz">0 €</div>
-            <p class="d">Vous semblez éligible au PTZ, qui viendrait s'ajouter au budget ci-dessus. Le montant définitif dépend de la zone du programme, de vos revenus et de la composition du foyer : votre conseiller le calcule précisément avec vous.</p>
+            <p class="d">
+              Vous relevez de la <strong data-result="ptz-tranche">tranche 1</strong> du barème, soit une quotité de
+              <strong data-result="ptz-quotite">50 %</strong> appliquée à <strong data-result="ptz-base">0 €</strong>,
+              le coût d'opération retenu étant plafonné à <strong data-result="ptz-plafond">0 €</strong> pour votre
+              foyer et votre zone.
+            </p>
+            <p class="d">
+              Ce prêt sans intérêts s'ajoute à votre budget, qui atteindrait alors
+              <strong data-result="budget-total">0 €</strong>.
+            </p>
           </div>
 
           <div class="result-note" data-ptz-ko>
             <i class="ph ph-info" aria-hidden="true"></i>
-            <span>Le prêt à taux zéro n'a pas été intégré à ce calcul : il est réservé aux primo-accédants qui achètent leur résidence principale dans le neuf. D'autres dispositifs peuvent s'appliquer à votre situation.</span>
+            <span data-ptz-ko-text>Le prêt à taux zéro est réservé aux primo-accédants qui achètent leur résidence principale dans le neuf. D'autres dispositifs peuvent s'appliquer à votre situation.</span>
           </div>
 
           <div class="result-note">
             <i class="ph ph-info" aria-hidden="true"></i>
-            <span>Simulation indicative calculée avec un taux d'endettement de <span data-result="endettement">35 %</span> et un taux de marché estimé. Elle ne constitue ni une offre de prêt, ni un conseil en investissement. Seule une banque peut valider votre financement.</span>
+            <span>Simulation indicative calculée avec un taux d'endettement de <span data-result="endettement">35 %</span> et un taux de marché estimé. Le prêt à taux zéro applique le barème officiel en vigueur, en retenant vos revenus nets annualisés là où l'administration retient le revenu fiscal de référence de l'année N-2 : le montant définitif peut donc varier. Cette simulation ne constitue ni une offre de prêt, ni un conseil en investissement. Seule une banque peut valider votre financement.</span>
           </div>
 
           <div class="sim-nav">

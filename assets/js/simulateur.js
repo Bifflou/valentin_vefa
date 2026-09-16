@@ -7,6 +7,77 @@
   var NOTARY = { neuf: 0.025, ancien: 0.075 };
   var MAX_DEBT_RATIO = 0.35;
 
+  /* ---------- Barème du prêt à taux zéro ----------
+     Source : economie.gouv.fr, décret 2025-299, articles du code de la
+     construction et de l'habitation cités devant chaque tableau.
+     À revérifier à chaque révision du dispositif (en vigueur jusqu'au
+     31 décembre 2027). */
+  var PTZ = {
+    /* Plafonds de l'opération, art. D31-10-10. La dernière ligne couvre 5 personnes et plus. */
+    plafondOperation: {
+      1: { A: 150000, B1: 135000, B2: 110000, C: 100000 },
+      2: { A: 225000, B1: 202500, B2: 165000, C: 150000 },
+      3: { A: 270000, B1: 243000, B2: 198000, C: 180000 },
+      4: { A: 315000, B1: 283500, B2: 231000, C: 210000 },
+      5: { A: 360000, B1: 324000, B2: 264000, C: 240000 }
+    },
+    /* Plafonds de ressources donnant accès au dispositif, art. D31-10-3-1. */
+    plafondRessources: {
+      1: { A: 49000, B1: 34500, B2: 31500, C: 28500 },
+      2: { A: 73500, B1: 51750, B2: 47250, C: 42750 },
+      3: { A: 88200, B1: 62100, B2: 56700, C: 51300 },
+      4: { A: 102900, B1: 72450, B2: 66150, C: 59850 },
+      5: { A: 117600, B1: 82800, B2: 75600, C: 68400 },
+      6: { A: 132300, B1: 93150, B2: 85050, C: 76950 },
+      7: { A: 147000, B1: 103500, B2: 94500, C: 85500 },
+      8: { A: 161700, B1: 113850, B2: 103950, C: 94050 }
+    },
+    /* Coefficient familial, déduit des plafonds de ressources ci-dessus. */
+    coefficient: { 1: 1, 2: 1.5, 3: 1.8, 4: 2.1, 5: 2.4, 6: 2.7, 7: 3, 8: 3.3 },
+    /* Tranches de ressources, art. D31-10-9, appliquées au revenu par personne. */
+    tranches: [
+      { A: 25000, B1: 21500, B2: 18000, C: 15000 },
+      { A: 31000, B1: 26000, B2: 22500, C: 19500 },
+      { A: 37000, B1: 30000, B2: 27000, C: 24000 },
+      { A: 49000, B1: 34500, B2: 31500, C: 28500 }
+    ],
+    /* Quotités, art. D31-10-9. La maison individuelle neuve est moins bien dotée. */
+    quotite: {
+      collectif: [0.5, 0.4, 0.4, 0.2],
+      individuel: [0.3, 0.2, 0.2, 0.1]
+    }
+  };
+
+  /* Renvoie le PTZ estimé, ou le motif de non-éligibilité. */
+  function estimatePtz(opts) {
+    var pers = Math.min(Math.max(opts.personnes, 1), 8);
+    var plafondRessources = PTZ.plafondRessources[pers][opts.zone];
+    if (opts.revenuAnnuel > plafondRessources) {
+      return { eligible: false, motif: "ressources", plafondRessources: plafondRessources, personnes: pers };
+    }
+    var revenuParPersonne = opts.revenuAnnuel / PTZ.coefficient[pers];
+    var tranche = -1;
+    for (var i = 0; i < PTZ.tranches.length; i++) {
+      if (revenuParPersonne <= PTZ.tranches[i][opts.zone]) { tranche = i; break; }
+    }
+    if (tranche === -1) {
+      return { eligible: false, motif: "ressources", plafondRessources: plafondRessources, personnes: pers };
+    }
+    var plafondOperation = PTZ.plafondOperation[Math.min(pers, 5)][opts.zone];
+    var base = Math.min(opts.prix, plafondOperation);
+    var quotite = PTZ.quotite[opts.collectif ? "collectif" : "individuel"][tranche];
+    /* Art. D31-10-6 : le PTZ ne peut pas depasser le montant des autres prets. */
+    return {
+      eligible: true,
+      montant: Math.min(base * quotite, opts.autresPrets),
+      tranche: tranche + 1,
+      quotite: quotite,
+      plafondOperation: plafondOperation,
+      base: base,
+      revenuParPersonne: revenuParPersonne
+    };
+  }
+
   /* ---------- Mini simulateur (accueil) ---------- */
   document.addEventListener("DOMContentLoaded", function () {
     var mini = document.querySelector("[data-mini-sim]");
@@ -49,8 +120,23 @@
       revenus: null,
       charges: 0,
       apport: null,
-      duree: 20
+      duree: 20,
+      personnes: 1,
+      zone: "A"
     };
+
+    /* Les deux questions du PTZ ne concernent que la primo-accession
+       dans le neuf pour une résidence principale : ailleurs, on ne les pose pas. */
+    var ptzFields = form.querySelector("[data-ptz-fields]");
+    function isNeuf() {
+      return state.bien === "appartement-neuf" || state.bien === "maison-neuve";
+    }
+    function ptzPossible() {
+      return state.objectif === "principale" && state.primo === "oui" && isNeuf();
+    }
+    function syncPtzFields() {
+      if (ptzFields) ptzFields.style.display = ptzPossible() ? "" : "none";
+    }
 
     /* ---------- Navigation ---------- */
     function show(index) {
@@ -106,9 +192,11 @@
           sibling.closest(".tile").classList.toggle("is-selected", sibling.checked);
         });
         state[input.name] = input.value;
+        syncPtzFields();
       });
     });
 
+    syncPtzFields();
     show(0);
 
     form.querySelectorAll("input[type='number']").forEach(function (input) {
@@ -116,6 +204,13 @@
         state[input.name] = parseFloat(input.value) || 0;
         var field = input.closest(".field");
         if (field) field.classList.remove("has-error");
+      });
+    });
+
+    form.querySelectorAll("select[name]").forEach(function (select) {
+      state[select.name] = select.name === "personnes" ? parseInt(select.value, 10) : select.value;
+      select.addEventListener("change", function () {
+        state[select.name] = select.name === "personnes" ? parseInt(select.value, 10) : select.value;
       });
     });
 
@@ -165,16 +260,25 @@
       var mensualiteMax = Math.max(revenus * MAX_DEBT_RATIO - charges, 0);
       var capacite = mensualiteMax > 0 ? loanCapacity(mensualiteMax, rate, duree) : 0;
 
-      var isNeuf = state.bien === "appartement-neuf" || state.bien === "maison-neuve";
-      var notaryRate = isNeuf ? NOTARY.neuf : NOTARY.ancien;
+      var notaryRate = isNeuf() ? NOTARY.neuf : NOTARY.ancien;
 
       /* Enveloppe disponible = emprunt + apport, dont il faut retirer les frais de notaire. */
       var enveloppe = capacite + apport;
       var prixBien = enveloppe / (1 + notaryRate);
       var fraisNotaire = prixBien * notaryRate;
 
-      var eligiblePtz = state.primo === "oui" && state.objectif === "principale" && isNeuf;
-      var ptz = eligiblePtz ? Math.min(prixBien * 0.2, 100000) : 0;
+      /* Le PTZ vient s'ajouter au budget : on l'estime sur le prix finançable
+         par le prêt principal, sans boucler sur l'enveloppe totale. */
+      var ptz = ptzPossible()
+        ? estimatePtz({
+            personnes: state.personnes,
+            zone: state.zone,
+            revenuAnnuel: revenus * 12,
+            prix: prixBien,
+            autresPrets: capacite,
+            collectif: state.bien === "appartement-neuf"
+          })
+        : { eligible: false, motif: "situation" };
 
       var coutInterets = mensualiteMax * duree * 12 - capacite;
       var endettement = revenus > 0 ? ((mensualiteMax + charges) / revenus) * 100 : 0;
@@ -192,13 +296,26 @@
       set("endettement", endettement.toFixed(1).replace(".", ",") + " %");
 
       var ptzBlock = form.querySelector("[data-ptz-block]");
-      if (ptzBlock) {
-        ptzBlock.style.display = eligiblePtz ? "" : "none";
-        set("ptz", euros(ptz));
-      }
-
       var ptzKo = form.querySelector("[data-ptz-ko]");
-      if (ptzKo) ptzKo.style.display = eligiblePtz ? "none" : "";
+      if (ptzBlock) ptzBlock.style.display = ptz.eligible ? "" : "none";
+      if (ptzKo) ptzKo.style.display = ptz.eligible ? "none" : "";
+
+      if (ptz.eligible) {
+        set("ptz", euros(ptz.montant));
+        set("ptz-tranche", "tranche " + ptz.tranche);
+        set("ptz-quotite", Math.round(ptz.quotite * 100) + " %");
+        set("ptz-plafond", euros(ptz.plafondOperation));
+        set("ptz-base", euros(ptz.base));
+        set("budget-total", euros(prixBien + ptz.montant));
+      } else if (ptzKo) {
+        var motif = ptz.motif === "ressources"
+          ? "Avec " + euros(revenus * 12) + " de revenus annuels pour " + ptz.personnes +
+            " personne" + (ptz.personnes > 1 ? "s" : "") + " en zone " + state.zone +
+            ", vous dépassez le plafond de ressources du PTZ, fixé à " + euros(ptz.plafondRessources) + "."
+          : "Le prêt à taux zéro est réservé aux primo-accédants qui achètent leur résidence principale dans le neuf. D'autres dispositifs peuvent s'appliquer à votre situation.";
+        var motifEl = ptzKo.querySelector("[data-ptz-ko-text]");
+        if (motifEl) motifEl.textContent = motif;
+      }
 
       var restart = form.querySelector("[data-sim-restart]");
       if (restart) {
