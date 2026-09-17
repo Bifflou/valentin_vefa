@@ -12,16 +12,14 @@
       root.removeAttribute("data-theme");
     }
   }
-  applyTheme(localStorage.getItem(THEME_KEY));
+  /* Le thème clair est le défaut : le sombre se choisit au bouton et se mémorise. */
+  applyTheme(localStorage.getItem(THEME_KEY) || "light");
 
   document.addEventListener("DOMContentLoaded", function () {
     var toggle = document.querySelector("[data-theme-toggle]");
     if (toggle) {
       toggle.addEventListener("click", function () {
-        var current = root.getAttribute("data-theme");
-        var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        var isDark = current ? current === "dark" : prefersDark;
-        var next = isDark ? "light" : "dark";
+        var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
         applyTheme(next);
         try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
       });

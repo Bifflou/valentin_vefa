@@ -43,7 +43,8 @@ Site statique, sans build ni dépendance à installer : HTML, CSS et JavaScript 
 - **Carte de localisation** construite avec Leaflet et les fonds de carte OpenStreetMap,
   sans aucune commande superposée : les conditions de l'iframe Google interdisent de masquer
   ses boutons, celle-ci n'en affiche aucun. Fond de carte assombri en thème sombre.
-- **Thème clair et sombre** : suit la préférence système, bascule manuelle mémorisée.
+- **Thème clair et sombre** : le clair s'applique par défaut, quelle que soit la préférence
+  du système. Le sombre relève d'un choix explicite au bouton, mémorisé dans le navigateur.
 - **Animations** : révélation au défilement et compteurs via `IntersectionObserver`,
   neutralisés sous `prefers-reduced-motion`.
 - **SEO** : titres et descriptions par page, Open Graph, `sitemap.xml`, `robots.txt`,

@@ -70,28 +70,8 @@
   --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.5);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0e1912;
-    --bg-dim: #0a140e;
-    --surface: #14251b;
-    --surface-raised: #182b20;
-    --ink: #f2f0e6;
-    --ink-soft: #b9c4ba;
-    --ink-faint: #93a099;
-    --line: rgba(242, 240, 230, 0.12);
-    --line-strong: rgba(242, 240, 230, 0.22);
-
-    --accent: #4f8567;
-    --accent-ink: #0c1a12;
-    --on-accent-soft: rgba(12, 26, 18, 0.72);
-
-    --amber: #d8b978;
-    --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.24);
-    --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.32);
-    --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.5);
-  }
-}
+/* Le thème clair est le défaut du site : le sombre ne s'applique qu'au choix
+   explicite du visiteur, jamais d'après la préférence du système. */
 
 /* ---------- Reset ---------- */
 *, *::before, *::after { box-sizing: border-box; }
@@ -276,9 +256,6 @@ p.lede {
 }
 /* Le logo est un lettrage vert foncé : on l'éclaircit sur fond sombre. */
 :root[data-theme="dark"] .brand img { filter: invert(1) hue-rotate(180deg) brightness(1.65); }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .brand img { filter: invert(1) hue-rotate(180deg) brightness(1.65); }
-}
 
 .main-nav { display: flex; align-items: center; gap: 30px; }
 .main-nav a {
@@ -316,10 +293,6 @@ p.lede {
 .theme-toggle .ph-moon { display: none; }
 :root[data-theme="dark"] .theme-toggle .ph-sun { display: none; }
 :root[data-theme="dark"] .theme-toggle .ph-moon { display: block; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .theme-toggle .ph-sun { display: none; }
-  :root:not([data-theme="light"]) .theme-toggle .ph-moon { display: block; }
-}
 
 .nav-toggle {
   display: none;
@@ -710,7 +683,7 @@ select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csv
   padding: 64px 48px;
   text-align: center;
 }
-:root[data-theme="dark"] .cta-banner, :root:not([data-theme="light"]) .cta-banner { background: var(--surface-raised); border: 1px solid var(--line-strong); }
+:root[data-theme="dark"] .cta-banner { background: var(--surface-raised); border: 1px solid var(--line-strong); }
 .cta-banner::before {
   content: "";
   position: absolute; inset: 0;
@@ -719,11 +692,11 @@ select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csv
   pointer-events: none;
 }
 .cta-banner h2 { color: #fff; font-size: clamp(28px, 3.6vw, 42px); position: relative; }
-:root[data-theme="dark"] .cta-banner h2, :root:not([data-theme="light"]) .cta-banner h2 { color: var(--ink); }
+:root[data-theme="dark"] .cta-banner h2 { color: var(--ink); }
 .cta-banner p { color: rgba(255,255,255,0.78); margin-top: 12px; position: relative; }
-:root[data-theme="dark"] .cta-banner p, :root:not([data-theme="light"]) .cta-banner p { color: var(--ink-soft); }
+:root[data-theme="dark"] .cta-banner p { color: var(--ink-soft); }
 .cta-banner .btn-primary { margin-top: 28px; background: #fff; color: var(--forest-800); position: relative; }
-:root[data-theme="dark"] .cta-banner .btn-primary, :root:not([data-theme="light"]) .cta-banner .btn-primary { background: var(--accent); color: var(--accent-ink); }
+:root[data-theme="dark"] .cta-banner .btn-primary { background: var(--accent); color: var(--accent-ink); }
 
 /* ---------- Footer ---------- */
 .site-footer { border-top: 1px solid var(--line); padding-top: 72px; }
@@ -791,9 +764,6 @@ select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csv
 /* Les tuiles n'existent qu'en version claire : on les assombrit sans toucher
    au repere ni a l'attribution. */
 :root[data-theme="dark"] .map-embed .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.95); }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .map-embed .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.95); }
-}
 .map-pin {
   display: grid;
   place-items: center;
