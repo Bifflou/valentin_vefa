@@ -16,7 +16,7 @@ Site statique, sans build ni dépendance à installer : HTML, CSS et JavaScript 
 | `avis.html` | Avis clients, note moyenne, méthode de collecte |
 | `faq.html` | Questions fréquentes filtrables par thème, avec données structurées `FAQPage` |
 | `a-propos.html` | Histoire, valeurs, chiffres, équipe, engagements |
-| `contact.html` | Formulaire validé, coordonnées, carte, réassurance |
+| `contact.html` | Réservation Calendly, coordonnées, carte, réassurance |
 | `mentions-legales.html` / `confidentialite.html` | Pages légales et RGPD |
 | `404.html` | Page d'erreur |
 
@@ -39,7 +39,9 @@ Site statique, sans build ni dépendance à installer : HTML, CSS et JavaScript 
 - **Estimation express** en page d'accueil, mise à jour en direct.
 - **FAQ filtrable** par thème, avec ouverture directe d'un thème par l'ancre de l'URL
   (`faq.html#financement`).
-- **Formulaire de contact** validé côté client, avec messages d'erreur sous chaque champ.
+- **Prise de rendez-vous Calendly** : chargée seulement après un clic (cookies tiers),
+  choix mémorisé. Depuis le simulateur, un résumé du dossier est prérempli dans la première
+  question de l'événement, et les réservations sont marquées par UTM selon leur provenance.
 - **Carte de localisation** construite avec Leaflet et les fonds de carte OpenStreetMap,
   sans aucune commande superposée : les conditions de l'iframe Google interdisent de masquer
   ses boutons, celle-ci n'en affiche aucun. Fond de carte assombri en thème sombre.
@@ -55,7 +57,7 @@ Site statique, sans build ni dépendance à installer : HTML, CSS et JavaScript 
 ```
 assets/
   css/style.css        design system complet (tokens, composants, thème sombre)
-  js/main.js           thème, navigation, révélations, compteurs, FAQ, formulaire
+  js/main.js           thème, navigation, révélations, compteurs, FAQ, carte, Calendly
   js/simulateur.js     estimation express et simulateur en cinq étapes
   js/zonage-abc.js     zonage ABC des 34 875 communes (table générée, 32 Ko)
   img/vefalys.png      logo
@@ -75,10 +77,9 @@ npx serve .
 
 ## À compléter avant la mise en production
 
-1. **Formulaire de contact** : il ouvre actuellement le logiciel de messagerie du visiteur
-   (attribut `data-mailto` sur le `<form>` de `contact.html`). Pour recevoir les demandes
-   directement par e-mail, remplacer par un service de formulaire (Formspree, Netlify Forms,
-   EmailJS) en renseignant `action` et `method` sur le formulaire.
+1. **Événement Calendly** : l'URL est définie dans `CALENDLY_URL` (`assets/js/main.js`).
+   La première question de l'événement doit rester un champ texte : c'est elle qui reçoit
+   le résumé de simulation.
 2. **Images** : les visuels proviennent d'Unsplash et servent d'illustration. À remplacer par
    les perspectives fournies par les promoteurs.
 3. **Avis clients** : les témoignages de `avis.html` sont des exemples de mise en page,
@@ -90,11 +91,11 @@ npx serve .
    Le barème du PTZ, juste en dessous dans l'objet `PTZ`, cite les articles du code de la
    construction dont il est tiré : il est en vigueur jusqu'au 31 décembre 2027 et devra
    être revérifié à chaque révision du dispositif.
-7. **Zonage ABC** : `assets/js/zonage-abc.js` reprend la liste ministérielle en vigueur
+6. **Zonage ABC** : `assets/js/zonage-abc.js` reprend la liste ministérielle en vigueur
    depuis le 26 juin 2026 ([jeu de données](https://www.data.gouv.fr/datasets/liste-des-communes-selon-le-zonage-abc/)).
    Chaque arrêté de reclassement la périme : régénérer la table depuis le CSV national,
    en ne conservant que les communes des zones A bis, A, B1 et B2, la zone C étant la
    valeur par défaut.
-6. **Fond de carte** : les tuiles viennent d'OpenStreetMap, sans clé. Sa politique
+7. **Fond de carte** : les tuiles viennent d'OpenStreetMap, sans clé. Sa politique
    d'usage vise un trafic modéré ; pour un site commercial à forte audience, passer à un
    fournisseur à clé (MapTiler, Mapbox) en remplaçant `TILE_URL` dans `assets/js/main.js`.

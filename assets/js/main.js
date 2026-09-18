@@ -213,7 +213,8 @@
         script.onerror = function () {
           calWidget.innerHTML =
             '<p class="rdv-erreur">Le calendrier n\'a pas pu se charger. Appelez-nous au ' +
-            '<a href="tel:+33669215665">06 69 21 56 65</a> ou utilisez le formulaire ci-dessous.</p>';
+            '<a href="tel:+33669215665">06 69 21 56 65</a> ou écrivez à ' +
+            '<a href="mailto:valentin@vefalys.fr">valentin@vefalys.fr</a>.</p>';
         };
         document.head.appendChild(script);
       };
@@ -256,51 +257,6 @@
     /* ---------- Footer year ---------- */
     document.querySelectorAll("[data-year]").forEach(function (el) {
       el.textContent = new Date().getFullYear();
-    });
-
-    /* ---------- Generic contact-style form validation ---------- */
-    document.querySelectorAll("form[data-validate]").forEach(function (form) {
-      form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        var valid = true;
-        form.querySelectorAll("[required]").forEach(function (input) {
-          var field = input.closest(".field");
-          var isEmpty = input.type === "checkbox" ? !input.checked : !input.value.trim();
-          var isBadEmail = input.type === "email" && input.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim());
-          if (field) field.classList.toggle("has-error", isEmpty || isBadEmail);
-          if (isEmpty || isBadEmail) valid = false;
-        });
-        var successEl = form.querySelector("[data-form-success]") || form.parentElement.querySelector("[data-form-success]");
-        if (valid) {
-          /* Sans backend, on ouvre le client mail de l'utilisateur avec le message prérempli. */
-          var mailto = form.getAttribute("data-mailto");
-          if (mailto) {
-            var get = function (name) {
-              var el = form.querySelector('[name="' + name + '"]');
-              return el ? el.value.trim() : "";
-            };
-            var subjectField = get("sujet");
-            var body = [
-              "Prénom : " + get("prenom"),
-              "Nom : " + get("nom"),
-              "E-mail : " + get("email"),
-              "Téléphone : " + (get("telephone") || "non renseigné"),
-              "Sujet : " + subjectField,
-              "",
-              get("message")
-            ].join("\n");
-            window.location.href =
-              "mailto:" + mailto +
-              "?subject=" + encodeURIComponent("Demande via le site : " + subjectField) +
-              "&body=" + encodeURIComponent(body);
-          }
-          form.style.display = "none";
-          if (successEl) successEl.style.display = "block";
-        } else {
-          var firstError = form.querySelector(".has-error input, .has-error select, .has-error textarea");
-          if (firstError) firstError.focus();
-        }
-      });
     });
   });
 })();
