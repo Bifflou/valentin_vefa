@@ -63,7 +63,7 @@
       <div class="section-head" style="margin-bottom:0;">
         <span class="eyebrow">Parlons de votre projet</span>
         <h1>Prendre rendez-vous</h1>
-        <p class="lede">Décrivez votre projet en quelques lignes. Un conseiller vous rappelle sous 24 heures ouvrées pour en discuter.</p>
+        <p class="lede">Choisissez directement un créneau : un conseiller vous appelle à l'heure convenue pour étudier votre projet.</p>
       </div>
     </div>
   </section>
@@ -73,8 +73,29 @@
       <div class="detail-layout">
 
         <div>
+          <div class="rdv-card" id="rdv">
+            <h2 style="font-size:24px;margin-bottom:8px;">Réservez votre créneau</h2>
+            <p class="rdv-intro">45 minutes par téléphone avec un conseiller Vefalys, sans frais et sans engagement.</p>
+
+            <div class="result-note" data-sim-transmise style="display:none;margin:18px 0 0;">
+              <i class="ph ph-check-circle" aria-hidden="true"></i>
+              <span>Le résultat de votre simulation sera joint à la réservation : le conseiller en disposera avant l'appel.</span>
+            </div>
+
+            <div class="rdv-consent" data-calendly-consent>
+              <span class="ico"><i class="ph ph-calendar-check" aria-hidden="true"></i></span>
+              <p>Le calendrier est fourni par Calendly, qui dépose ses propres cookies lors de son affichage.
+                <a href="confidentialite.html">En savoir plus</a></p>
+              <button type="button" class="btn btn-primary" data-calendly-load>Afficher les créneaux disponibles</button>
+            </div>
+
+            <div class="rdv-widget" data-calendly-widget hidden></div>
+          </div>
+
+          <div class="rdv-ecrire">
+            <h2 style="font-size:22px;margin-bottom:6px;">Vous préférez nous écrire&#8239;?</h2>
+            <p class="rdv-intro" style="margin-bottom:24px;">Décrivez votre projet, un conseiller vous répond sous 24 heures ouvrées.</p>
           <form data-validate data-mailto="contact@vefalys.fr" novalidate>
-            <h2 style="font-size:24px;margin-bottom:24px;">Votre message</h2>
 
             <div class="row-2">
               <div class="field">
@@ -140,6 +161,7 @@
             <h3>Votre message est prêt à partir</h3>
             <p>Votre logiciel de messagerie vient de s'ouvrir avec la demande préremplie. Il ne reste plus qu'à l'envoyer, et un conseiller vous répond sous 24 heures ouvrées.</p>
             <p style="margin-top:14px;">Rien ne s'est ouvert&#8239;? Écrivez-nous à <a href="mailto:contact@vefalys.fr" style="color:var(--accent);font-weight:700;">contact@vefalys.fr</a> ou appelez le <a href="tel:+33669215665" style="color:var(--accent);font-weight:700;">06 69 21 56 65</a>.</p>
+          </div>
           </div>
         </div>
 

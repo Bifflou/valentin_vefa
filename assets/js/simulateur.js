@@ -433,6 +433,31 @@
         if (motifEl) motifEl.textContent = motif;
       }
 
+      /* Résumé transmis au conseiller avec la réservation Calendly. */
+      var lienRdv = form.querySelector("[data-rdv-simulation]");
+      if (lienRdv) {
+        var OBJECTIFS = { principale: "résidence principale", locatif: "investissement locatif" };
+        var BIENS = {
+          "appartement-neuf": "appartement neuf", "maison-neuve": "maison neuve",
+          "ancien-travaux": "ancien avec travaux", ancien: "ancien sans travaux"
+        };
+        var commune = form.querySelector("[data-commune]");
+        var nomCommune = commune && commune.selectedIndex > -1 && communeRow && communeRow.style.display !== "none"
+          ? commune.options[commune.selectedIndex].text : "";
+        var morceaux = [
+          "Simulation Vefalys : " + OBJECTIFS[state.objectif] + ", " + BIENS[state.bien] +
+            (state.primo === "oui" ? ", primo-accédant" : "") + ".",
+          "Revenus " + euros(revenus) + " par mois" + (charges ? ", crédits en cours " + euros(charges) + " par mois" : "") +
+            ", apport " + euros(apport) + ", prêt sur " + duree + " ans.",
+          "Budget estimé " + euros(prixBien) + ", capacité d'emprunt " + euros(capacite) + "."
+        ];
+        if (ptz.eligible) {
+          morceaux.push("PTZ estimé " + euros(ptz.montant) + " (tranche " + ptz.tranche + ", zone " + state.zone +
+            (nomCommune ? ", " + nomCommune : "") + ", " + state.personnes + " personne" + (state.personnes > 1 ? "s" : "") + ").");
+        }
+        lienRdv.href = "contact.html?sim=" + encodeURIComponent(morceaux.join(" ")) + "#rdv";
+      }
+
       var restart = form.querySelector("[data-sim-restart]");
       if (restart) {
         restart.onclick = function () { show(0); };

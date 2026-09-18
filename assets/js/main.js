@@ -169,6 +169,62 @@
       }).addTo(map);
     }
 
+    /* ---------- Réservation Calendly ----------
+       Le widget dépose des cookies tiers : il ne se charge qu'après un clic,
+       puis ce choix est mémorisé pour les visites suivantes. */
+    var calWidget = document.querySelector("[data-calendly-widget]");
+    if (calWidget) {
+      var CALENDLY_URL = "https://calendly.com/afonso-valentin05/30min";
+      var CAL_KEY = "vefalys-calendly";
+      var calConsent = document.querySelector("[data-calendly-consent]");
+      var resumeSimulation = new URLSearchParams(window.location.search).get("sim");
+
+      var simNotice = document.querySelector("[data-sim-transmise]");
+      if (resumeSimulation && simNotice) simNotice.style.display = "flex";
+
+      var chargerCalendly = function () {
+        if (calConsent) calConsent.hidden = true;
+        calWidget.hidden = false;
+        try { localStorage.setItem(CAL_KEY, "1"); } catch (e) {}
+
+        /* Couleurs de la marque : prises en compte sur les offres Calendly payantes, ignorées sinon. */
+        var sombre = root.getAttribute("data-theme") === "dark";
+        var url = CALENDLY_URL +
+          "?hide_event_type_details=1&hide_landing_page_details=1" +
+          "&primary_color=" + (sombre ? "4f8567" : "1a3a2a") +
+          "&text_color=" + (sombre ? "f2f0e6" : "16261d") +
+          "&background_color=" + (sombre ? "14251b" : "ffffff");
+        /* a1 = première question personnalisée de l'événement. Passé dans l'URL :
+           l'option prefill.customAnswers du widget est ignorée par sa version actuelle. */
+        if (resumeSimulation) url += "&a1=" + encodeURIComponent(resumeSimulation);
+
+        var initialiser = function () {
+          window.Calendly.initInlineWidget({
+            url: url,
+            parentElement: calWidget,
+            utm: { utmSource: "site-vefalys", utmMedium: resumeSimulation ? "simulateur" : "contact" }
+          });
+        };
+        if (window.Calendly) { initialiser(); return; }
+        var script = document.createElement("script");
+        script.src = "https://assets.calendly.com/assets/external/widget.js";
+        script.async = true;
+        script.onload = initialiser;
+        script.onerror = function () {
+          calWidget.innerHTML =
+            '<p class="rdv-erreur">Le calendrier n\'a pas pu se charger. Appelez-nous au ' +
+            '<a href="tel:+33669215665">06 69 21 56 65</a> ou utilisez le formulaire ci-dessous.</p>';
+        };
+        document.head.appendChild(script);
+      };
+
+      var calBtn = document.querySelector("[data-calendly-load]");
+      if (calBtn) calBtn.addEventListener("click", chargerCalendly);
+      var calAccepte = false;
+      try { calAccepte = localStorage.getItem(CAL_KEY) === "1"; } catch (e) {}
+      if (calAccepte) chargerCalendly();
+    }
+
     /* ---------- FAQ: filtres par catégorie ---------- */
     var faqChips = document.querySelectorAll("[data-faq-cat]");
     var faqItems = document.querySelectorAll("[data-faq-item]");
