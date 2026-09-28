@@ -175,8 +175,6 @@
     var calWidget = document.querySelector("[data-calendly-widget]");
     if (calWidget) {
       var CALENDLY_URL = "https://calendly.com/afonso-valentin05/30min";
-      var resumeSimulation = new URLSearchParams(window.location.search).get("sim");
-
       /* Couleurs de la marque : prises en compte sur les offres Calendly payantes, ignorées sinon. */
       var sombre = root.getAttribute("data-theme") === "dark";
       var url = CALENDLY_URL +
@@ -184,15 +182,12 @@
         "&primary_color=" + (sombre ? "4f8567" : "1a3a2a") +
         "&text_color=" + (sombre ? "f2f0e6" : "16261d") +
         "&background_color=" + (sombre ? "14251b" : "ffffff");
-      /* a1 = première question personnalisée de l'événement. Passé dans l'URL :
-         l'option prefill.customAnswers du widget est ignorée par sa version actuelle. */
-      if (resumeSimulation) url += "&a1=" + encodeURIComponent(resumeSimulation);
 
       var initialiser = function () {
         window.Calendly.initInlineWidget({
           url: url,
           parentElement: calWidget,
-          utm: { utmSource: "site-vefalys", utmMedium: resumeSimulation ? "simulateur" : "contact" }
+          utm: { utmSource: "site-vefalys" }
         });
       };
       var script = document.createElement("script");

@@ -40,9 +40,8 @@ Site statique, sans build ni dépendance à installer : HTML, CSS et JavaScript 
 - **FAQ filtrable** par thème, avec ouverture directe d'un thème par l'ancre de l'URL
   (`faq.html#financement`).
 - **Prise de rendez-vous Calendly** : calendrier affiché directement sur la page de contact,
-  Calendly présentant lui-même son bandeau de cookies. Depuis le simulateur, un résumé du
-  dossier est prérempli dans la première question de l'événement, et les réservations sont
-  marquées par UTM selon leur provenance.
+  Calendly présentant lui-même son bandeau de cookies. Aucune donnée du simulateur ne lui est
+  transmise.
 - **Carte de localisation** construite avec Leaflet et les fonds de carte OpenStreetMap,
   sans aucune commande superposée : les conditions de l'iframe Google interdisent de masquer
   ses boutons, celle-ci n'en affiche aucun. Fond de carte assombri en thème sombre.
@@ -79,8 +78,6 @@ npx serve .
 ## À compléter avant la mise en production
 
 1. **Événement Calendly** : l'URL est définie dans `CALENDLY_URL` (`assets/js/main.js`).
-   La première question de l'événement doit rester un champ texte : c'est elle qui reçoit
-   le résumé de simulation.
 2. **Images** : les visuels proviennent d'Unsplash et servent d'illustration. À remplacer par
    les perspectives fournies par les promoteurs.
 3. **Avis clients** : les témoignages de `avis.html` sont des exemples de mise en page,
