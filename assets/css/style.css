@@ -915,7 +915,7 @@ select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csv
 .rating-block p { color: var(--ink-soft); font-size: 15px; }
 .quote-stack { display: grid; gap: 16px; }
 
-/* ---------- Mini simulateur (teaser) ---------- */
+/* ---------- Colonnes jumelles ---------- */
 .mini-sim-split {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -925,29 +925,6 @@ select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csv
 @media (max-width: 900px) {
   .mini-sim-split { grid-template-columns: 1fr; gap: 32px; }
 }
-.mini-sim {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  padding: 32px;
-  box-shadow: var(--shadow-md);
-}
-.mini-sim h3 { font-size: 21px; margin-bottom: 20px; }
-.mini-sim-out {
-  margin-top: 24px;
-  padding-top: 22px;
-  border-top: 1px solid var(--line);
-}
-.mini-sim-out .k { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); }
-.mini-sim-out .v {
-  font-family: var(--font-display);
-  font-size: clamp(34px, 5vw, 46px);
-  font-weight: 700;
-  color: var(--accent);
-  line-height: 1.1;
-  margin-top: 6px;
-}
-.mini-sim-out .d { font-size: 13px; color: var(--ink-soft); margin-top: 8px; }
 
 /* ---------- Trust strip ---------- */
 .trust-strip {

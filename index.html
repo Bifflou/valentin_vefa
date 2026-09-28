@@ -226,8 +226,23 @@
     </div>
   </section>
 
+  <!-- Simulateur de budget -->
+  <section class="section" id="simulateur">
+    <div class="container">
+      <div class="section-head section-head--center" data-reveal>
+        <h2 class="h-section">Combien pouvez-vous acheter&#8239;?</h2>
+        <p class="lede">Cinq étapes pour connaître votre capacité d'emprunt, vos mensualités, vos frais de notaire et votre éligibilité au prêt à taux zéro.</p>
+      </div>
+      <div data-simulateur-mount>
+        <noscript>
+          <p class="text-center"><a href="financement.html" class="btn btn-primary">Ouvrir le simulateur de budget</a></p>
+        </noscript>
+      </div>
+    </div>
+  </section>
+
   <!-- Avis -->
-  <section class="section">
+  <section class="section" style="background: var(--bg-dim);">
     <div class="container">
       <div class="rating-split">
         <div class="rating-block" data-reveal>
@@ -258,48 +273,6 @@
               <div><strong>Rémi Marchand</strong><span>Investisseur locatif, Bordeaux</span></div>
             </div>
           </article>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Mini simulateur -->
-  <section class="section" style="background: var(--bg-dim);">
-    <div class="container">
-      <div class="mini-sim-split">
-        <div data-reveal>
-          <h2 class="h-section">Sachez ce que vous pouvez acheter</h2>
-          <p class="lede">Une première estimation en dix secondes, puis un calcul complet avec apport, frais de notaire et prêt à taux zéro.</p>
-          <ul class="hero-checks" style="margin-top: 26px;">
-            <li><i class="ph ph-check-circle" aria-hidden="true"></i>Capacité d'emprunt et mensualité détaillées</li>
-            <li><i class="ph ph-check-circle" aria-hidden="true"></i>Frais de notaire calculés selon le type de bien</li>
-            <li><i class="ph ph-check-circle" aria-hidden="true"></i>Éligibilité au prêt à taux zéro vérifiée</li>
-          </ul>
-          <div style="margin-top: 30px;">
-            <a href="financement.html" class="btn btn-primary">Simuler mon budget</a>
-          </div>
-        </div>
-
-        <div class="mini-sim" data-mini-sim data-reveal>
-          <h3>Estimation express</h3>
-          <div class="field">
-            <label for="mini-revenus">Revenus nets mensuels du foyer</label>
-            <input class="input" type="number" id="mini-revenus" data-mini-revenus value="4200" min="0" step="100" inputmode="numeric">
-            <span class="hint">Salaires nets avant impôt, primes régulières incluses.</span>
-          </div>
-          <div class="field">
-            <label for="mini-duree">Durée du prêt</label>
-            <select class="input" id="mini-duree" data-mini-duree>
-              <option value="15">15 ans</option>
-              <option value="20" selected>20 ans</option>
-              <option value="25">25 ans</option>
-            </select>
-          </div>
-          <div class="mini-sim-out">
-            <span class="k">Capacité d'emprunt estimée</span>
-            <div class="v" data-mini-out>0 €</div>
-            <p class="d" data-mini-detail></p>
-          </div>
         </div>
       </div>
     </div>
@@ -368,6 +341,7 @@
 </footer>
 
 <script src="assets/js/main.js"></script>
+<script src="assets/js/zonage-abc.js"></script>
 <script src="assets/js/simulateur.js"></script>
 </body>
 </html>

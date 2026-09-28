@@ -100,36 +100,9 @@
     };
   }
 
-  /* ---------- Mini simulateur (accueil) ---------- */
-  document.addEventListener("DOMContentLoaded", function () {
-    var mini = document.querySelector("[data-mini-sim]");
-    if (!mini) return;
-    var revenus = mini.querySelector("[data-mini-revenus]");
-    var duree = mini.querySelector("[data-mini-duree]");
-    var out = mini.querySelector("[data-mini-out]");
-    var detail = mini.querySelector("[data-mini-detail]");
-
-    function update() {
-      var r = parseFloat(revenus.value) || 0;
-      var y = parseInt(duree.value, 10) || 20;
-      var rate = RATES[y] || 3.5;
-      var monthly = r * MAX_DEBT_RATIO;
-      var i = rate / 100 / 12;
-      var n = y * 12;
-      var capacity = monthly > 0 ? monthly * (1 - Math.pow(1 + i, -n)) / i : 0;
-      out.textContent = Math.round(capacity).toLocaleString("fr-FR") + " €";
-      detail.textContent = monthly > 0
-        ? "Soit " + Math.round(monthly).toLocaleString("fr-FR") + " € par mois sur " + y + " ans, au taux indicatif de " + rate.toFixed(2).replace(".", ",") + " %."
-        : "Renseignez vos revenus mensuels nets pour obtenir une estimation.";
-    }
-    revenus.addEventListener("input", update);
-    duree.addEventListener("change", update);
-    update();
-  });
-
-  document.addEventListener("DOMContentLoaded", function () {
-    var form = document.querySelector("[data-simulator]");
-    if (!form) return;
+  /* Initialise un simulateur : la page d accueil et la page financement
+     partagent le meme balisage, injecte au besoin depuis financement.html. */
+  function initSimulateur(form) {
 
     var panels = Array.prototype.slice.call(form.querySelectorAll(".sim-panel"));
     var bars = Array.prototype.slice.call(form.querySelectorAll(".sim-progress .bar span"));
@@ -502,5 +475,32 @@
         restart.onclick = function () { show(0); };
       }
     }
+  }
+
+  /* ---------- Mise en place ----------
+     La page financement porte le balisage du simulateur. La page d'accueil le
+     reprend de là plutôt que d'en héberger une copie, qui finirait par diverger. */
+  document.addEventListener("DOMContentLoaded", function () {
+    var present = document.querySelector("[data-simulator]");
+    if (present) { initSimulateur(present); return; }
+
+    var support = document.querySelector("[data-simulateur-mount]");
+    if (!support) return;
+
+    var replier = function () {
+      support.innerHTML = '<p class="text-center">' +
+        '<a href="financement.html" class="btn btn-primary">Ouvrir le simulateur de budget</a></p>';
+    };
+
+    fetch("financement.html")
+      .then(function (r) { return r.ok ? r.text() : Promise.reject(r.status); })
+      .then(function (html) {
+        var distant = new DOMParser().parseFromString(html, "text/html").querySelector("[data-simulator]");
+        if (!distant) { replier(); return; }
+        support.innerHTML = "";
+        support.appendChild(document.importNode(distant, true));
+        initSimulateur(support.querySelector("[data-simulator]"));
+      })
+      .catch(replier);
   });
 })();
