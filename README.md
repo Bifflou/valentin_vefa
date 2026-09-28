@@ -39,9 +39,10 @@ Site statique, sans build ni dépendance à installer : HTML, CSS et JavaScript 
 - **Estimation express** en page d'accueil, mise à jour en direct.
 - **FAQ filtrable** par thème, avec ouverture directe d'un thème par l'ancre de l'URL
   (`faq.html#financement`).
-- **Prise de rendez-vous Calendly** : chargée seulement après un clic (cookies tiers),
-  choix mémorisé. Depuis le simulateur, un résumé du dossier est prérempli dans la première
-  question de l'événement, et les réservations sont marquées par UTM selon leur provenance.
+- **Prise de rendez-vous Calendly** : calendrier affiché directement sur la page de contact,
+  Calendly présentant lui-même son bandeau de cookies. Depuis le simulateur, un résumé du
+  dossier est prérempli dans la première question de l'événement, et les réservations sont
+  marquées par UTM selon leur provenance.
 - **Carte de localisation** construite avec Leaflet et les fonds de carte OpenStreetMap,
   sans aucune commande superposée : les conditions de l'iframe Google interdisent de masquer
   ses boutons, celle-ci n'en affiche aucun. Fond de carte assombri en thème sombre.
