@@ -140,6 +140,12 @@
             </label>
           </div>
 
+          <div class="field" style="margin-top:30px;">
+            <label for="prixCible">Prix du bien que vous avez repéré (€)</label>
+            <input class="input" type="number" id="prixCible" name="prixCible" min="0" step="1000" inputmode="numeric" placeholder="Facultatif">
+            <span class="hint">Si vous avez déjà un bien en vue, indiquez son prix : nous comparerons sa mensualité à votre mensualité maximale.</span>
+          </div>
+
           <p class="group-label" id="lbl-primo" style="margin-top:30px;">Êtes-vous primo-accédant ?</p>
           <div class="tile-group tile-2" role="radiogroup" aria-labelledby="lbl-primo">
             <label class="tile">
@@ -295,6 +301,18 @@
             <span class="label">Budget d'acquisition estimé</span>
             <div class="amount" data-result="budget">0 €</div>
             <p class="sub">Prix du bien finançable avec vos frais de notaire, hors mobilier et hors stationnement.</p>
+          </div>
+
+          <div class="result-card" data-bien-vise style="display:none;margin-bottom:24px;">
+            <div class="k">Le bien que vous avez repéré</div>
+            <div class="v" data-result="cible-mensualite">0 €</div>
+            <p class="d">
+              Mensualité estimée pour un bien à <strong data-result="cible-prix">0 €</strong>, frais de notaire
+              inclus<span data-result="cible-ptz"></span>, à comparer à votre mensualité maximale de
+              <strong data-result="cible-plafond">0 €</strong>.
+            </p>
+            <p class="d" data-result="cible-verdict"></p>
+            <p class="d" data-result="cible-note"></p>
           </div>
 
           <div class="result-grid">

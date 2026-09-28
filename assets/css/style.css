@@ -64,6 +64,7 @@
   --accent-ink: #0c1a12;
   --on-accent-soft: rgba(12, 26, 18, 0.72);
 
+  --error: #e0918d;
   --amber: #d8b978;
   --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.24);
   --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.32);
@@ -823,6 +824,10 @@ select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csv
 .result-card .k { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-faint); font-weight: 700; }
 .result-card .v { font-family: var(--font-display); font-size: 26px; font-weight: 700; margin-top: 8px; }
 .result-card .d { font-size: 13px; color: var(--ink-soft); margin-top: 6px; }
+/* Specificite alignee sur .result-card .d, sinon la couleur du verdict
+   est ecrasee et les deux etats s'affichent a l'identique. */
+.result-card .d.verdict-ok { color: var(--accent); font-weight: 700; }
+.result-card .d.verdict-over { color: var(--error); font-weight: 700; }
 .result-note { background: var(--bg-dim); border-radius: var(--radius-md); padding: 20px 22px; font-size: 14px; color: var(--ink-soft); display: flex; gap: 12px; margin-bottom: 36px; }
 .result-note .ph-info { color: var(--accent); font-size: 20px; flex-shrink: 0; }
 

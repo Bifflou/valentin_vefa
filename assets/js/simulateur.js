@@ -145,7 +145,8 @@
       duree: 20,
       personnes: 1,
       zone: "A",
-      rfr: null
+      rfr: null,
+      prixCible: null
     };
 
     /* Le PTZ retient le revenu fiscal de référence de l'année N-2, qui figure
@@ -326,6 +327,13 @@
       return monthly * (1 - Math.pow(1 + i, -n)) / i;
     }
 
+    /* Mensualité nécessaire pour emprunter un capital donné : inverse de la précédente. */
+    function monthlyFor(capital, annualRate, years) {
+      var i = annualRate / 100 / 12;
+      var n = years * 12;
+      return capital <= 0 ? 0 : capital * i / (1 - Math.pow(1 + i, -n));
+    }
+
     function euros(n) {
       return Math.round(n).toLocaleString("fr-FR") + " €";
     }
@@ -431,6 +439,62 @@
           : "Le prêt à taux zéro est réservé aux primo-accédants qui achètent leur résidence principale dans le neuf. D'autres dispositifs peuvent s'appliquer à votre situation.";
         var motifEl = ptzKo.querySelector("[data-ptz-ko-text]");
         if (motifEl) motifEl.textContent = motif;
+      }
+
+      /* ---------- Bien déjà repéré ----------
+         On calcule la mensualité réelle de ce bien pour la confronter au plafond.
+         Le PTZ, sans intérêts, est lissé sur la même durée que le prêt principal :
+         un différé de remboursement allégerait en pratique les premières années. */
+      var blocCible = form.querySelector("[data-bien-vise]");
+      if (blocCible) {
+        var prixCible = state.prixCible || 0;
+        if (prixCible > 0 && mensualiteMax > 0) {
+          var besoin = prixCible * (1 + notaryRate) - apport;
+          var ptzCible = 0;
+          if (ptzPossible() && besoin > 0) {
+            var estimCible = estimatePtz({
+              personnes: state.personnes,
+              zone: state.zone,
+              revenuAnnuel: revenuPtz,
+              prix: prixCible,
+              autresPrets: besoin / 2, /* le PTZ ne peut exceder les autres prets */
+              collectif: state.bien === "appartement-neuf"
+            });
+            if (estimCible.eligible) ptzCible = estimCible.montant;
+          }
+          var capitalBanque = Math.max(besoin - ptzCible, 0);
+          var mensualiteCible = monthlyFor(capitalBanque, rate, duree) + ptzCible / (duree * 12);
+          var marge = mensualiteMax - mensualiteCible;
+
+          set("cible-prix", euros(prixCible));
+          set("cible-mensualite", euros(mensualiteCible));
+          set("cible-plafond", euros(mensualiteMax));
+          set("cible-ptz", ptzCible > 0 ? " et prêt à taux zéro de " + euros(ptzCible) + " déduit" : "");
+          set("cible-note", ptzCible > 0
+            ? "Cette mensualité additionne le prêt bancaire et le remboursement du prêt à taux zéro, lissé ici sur la même durée. Un différé de remboursement, fréquent sur le PTZ, allégerait les premières années."
+            : "");
+
+          var verdict = form.querySelector('[data-result="cible-verdict"]');
+          if (verdict) {
+            if (marge >= 0) {
+              verdict.className = "d verdict-ok";
+              verdict.textContent = "Ce bien tient dans votre budget : il vous resterait " + euros(marge) +
+                " de marge par mois.";
+            } else {
+              /* Apport qu'il faudrait ajouter pour ramener la mensualité sous le plafond. */
+              var mensualiteBanqueMax = Math.max(mensualiteMax - ptzCible / (duree * 12), 0);
+              var capitalBanqueMax = loanCapacity(mensualiteBanqueMax, rate, duree);
+              var apportSupplementaire = Math.max(capitalBanque - capitalBanqueMax, 0);
+              verdict.className = "d verdict-over";
+              verdict.textContent = "Ce bien dépasse votre mensualité maximale de " + euros(-marge) +
+                " par mois. Il faudrait environ " + euros(apportSupplementaire) +
+                " d'apport supplémentaire, ou négocier le prix, pour revenir dans votre budget.";
+            }
+          }
+          blocCible.style.display = "";
+        } else {
+          blocCible.style.display = "none";
+        }
       }
 
       var restart = form.querySelector("[data-sim-restart]");
