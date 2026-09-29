@@ -1,0 +1,93 @@
+name: Mise a jour des taux indicatifs
+
+# La Banque de France publie les donnees d'un mois environ cinq semaines apres
+# sa fin : les chiffres de juillet 2026 sont parus le 7 septembre 2026. On passe
+# le 12 pour laisser de la marge.
+on:
+  schedule:
+    - cron: "0 7 12 * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Afficher le resultat sans ouvrir de pull request"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  taux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Essai a blanc
+        if: inputs.dry_run
+        env:
+          WEBSTAT_CLIENT_ID: ${{ secrets.WEBSTAT_CLIENT_ID }}
+        run: node scripts/maj-taux.mjs --dry-run
+
+      - name: Recuperer les taux
+        id: taux
+        if: ${{ !inputs.dry_run }}
+        env:
+          WEBSTAT_CLIENT_ID: ${{ secrets.WEBSTAT_CLIENT_ID }}
+        run: node scripts/maj-taux.mjs
+
+      - name: Ouvrir la pull request
+        if: ${{ !inputs.dry_run && steps.taux.outputs.mois != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MOIS: ${{ steps.taux.outputs.mois }}
+          ANCRE: ${{ steps.taux.outputs.ancre }}
+          T15: ${{ steps.taux.outputs.taux15 }}
+          T20: ${{ steps.taux.outputs.taux20 }}
+          T25: ${{ steps.taux.outputs.taux25 }}
+          A15: ${{ steps.taux.outputs.avant15 }}
+          A20: ${{ steps.taux.outputs.avant20 }}
+          A25: ${{ steps.taux.outputs.avant25 }}
+        run: |
+          if git diff --quiet; then
+            echo "Aucune modification, rien a proposer."
+            exit 0
+          fi
+          # Le numero d'execution rend la branche unique : jamais de force-push.
+          BRANCHE="taux/$(date +%Y-%m)-$GITHUB_RUN_NUMBER"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCHE"
+          git add -A
+          git commit -m "Taux indicatifs : donnees de $MOIS"
+          git push -u origin "$BRANCHE"
+          cat > /tmp/corps.md <<EOF
+          Mise a jour automatique des taux indicatifs du simulateur.
+
+          **Source** : Banque de France, taux des credits nouveaux a l'habitat
+          (hors renegociations) aux particuliers, donnees de $MOIS, soit
+          **$ANCRE %**. Serie \`MIR1.M.FR.B.A22HR.A.R.A.2254U6.EUR.N\`.
+
+          | Duree | Avant | Apres |
+          |---|---|---|
+          | 15 ans | $A15 % | **$T15 %** |
+          | 20 ans | $A20 % | **$T20 %** |
+          | 25 ans | $A25 % | **$T25 %** |
+
+          La methode de derivation des trois durees est decrite dans
+          [docs/taux.md]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/main/docs/taux.md).
+          Le parametre \`?v=\` des pages est remonte pour que la nouvelle grille
+          atteigne tout de suite les visiteurs deja venus.
+
+          A relire avant de fusionner : les trois valeurs doivent rester
+          coherentes avec les barometres publies du mois.
+          EOF
+          gh pr create \
+            --title "Taux indicatifs : donnees de $MOIS" \
+            --body-file /tmp/corps.md \
+            --base main \
+            --head "$BRANCHE"
