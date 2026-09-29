@@ -2,14 +2,17 @@
 /*
  * Met a jour les taux indicatifs du simulateur depuis la Banque de France.
  *
- * Source : serie MIR1.M.FR.B.A22HR.A.R.A.2254U6.EUR.N, taux des credits
- * nouveaux a l'habitat hors renegociations, hors frais et hors assurance.
+ * Source : serie MIR1.M.FR.B.A22HR.A.R.A.2254U6.EUR.N, « Taux des credits
+ * nouveaux a l'habitat (hors negociations) aux particuliers ». Taux effectif
+ * au sens etroit : hors frais de dossier et hors assurance emprunteur, ce qui
+ * en fait la base correcte d'une formule d'amortissement.
+ *
  * Methode de derivation des trois durees : docs/taux.md
  *
  *   node scripts/maj-taux.mjs --dry-run    n'ecrit rien, affiche ce qu'il ferait
  *   node scripts/maj-taux.mjs              ecrit les fichiers
  *
- * Variable d'environnement requise : WEBSTAT_CLIENT_ID
+ * Aucune cle d'API n'est requise : l'export CSV du portail est public.
  */
 
 import { readFile, writeFile, readdir } from "node:fs/promises";
@@ -19,10 +22,17 @@ import path from "node:path";
 const RACINE = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const FICHIER_JS = path.join(RACINE, "assets", "js", "simulateur.js");
 
-const SERIE = "MIR1.M.FR.B.A22HR.A.R.A.2254U6.EUR.N";
 const JEU = "MIR1";
-const CLE = SERIE.replace(/^MIR1\./, "");   /* la convention SDMX omet le prefixe du jeu */
-const RACINE_API = "https://api.webstat.banque-france.fr/webstat-fr/v1";
+const SERIE = "MIR1.M.FR.B.A22HR.A.R.A.2254U6.EUR.N";
+
+/* Export CSV public du portail, trie de la periode la plus recente a la plus
+   ancienne. L'API JSON existe aussi mais exige une cle : elle ne sert ici que
+   de secours, si WEBSTAT_APIKEY est fourni.
+   Guide : https://webstat.banque-france.fr/fr/pages/guide-migration-api/ */
+const EXPORT_CSV = `https://webstat.banque-france.fr/export/csv/fr/catalog/${JEU}/${SERIE}`;
+const API_JSON = "https://webstat.banque-france.fr/api/explore/v2.1" +
+  "/catalog/datasets/observations/exports/json" +
+  `?where=series_key%3D%22${SERIE}%22&order_by=time_period_start%20desc&limit=6`;
 
 /* Calibrage documente dans docs/taux.md */
 const DUREE_ANCRE = 23.42;      /* duree initiale moyenne des credits nouveaux */
@@ -34,133 +44,106 @@ const ECART_25 = 0.12;          /* 20 ans -> 25 ans */
 const ANCRE_MIN = 0.5, ANCRE_MAX = 8;
 const VARIATION_MAX = 0.5;
 
-const MOIS_FR = ["janvier", "fevrier", "mars", "avril", "mai", "juin",
-  "juillet", "aout", "septembre", "octobre", "novembre", "decembre"];
-const MOIS_FR_ACCENTS = ["janvier", "février", "mars", "avril", "mai", "juin",
+const MOIS_FR = ["janvier", "février", "mars", "avril", "mai", "juin",
   "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+const MOIS_SANS_ACCENT = ["janvier", "fevrier", "mars", "avril", "mai", "juin",
+  "juillet", "aout", "septembre", "octobre", "novembre", "decembre"];
 
 const sec = process.argv.includes("--dry-run");
 
 /* On leve au lieu d'appeler process.exit : sortir pendant qu'une socket HTTP
-   est encore ouverte fait avorter Node sous Windows, avec un code trompeur. */
+   est encore ouverte fait avorter Node, avec un code de sortie trompeur. */
 class Echec extends Error {}
 function erreur(message) {
   throw new Echec(message);
 }
 
-/* ---------- Appel de l'API ----------
-   La Banque de France accepte la cle dans l'en-tete X-IBM-Client-Id, methode
-   qu'elle recommande, ou dans le parametre client_id. Le chemin exact d'une
-   serie n'est pas documente publiquement : on sonde d'abord le catalogue, qui
-   l'est, pour distinguer un probleme de cle d'un probleme de chemin. */
-const MECANISMES = [
-  { nom: "en-tete X-IBM-Client-Id", entete: (c) => ({ "X-IBM-Client-Id": c }), parametre: () => "" },
-  { nom: "parametre client_id", entete: () => ({}), parametre: (c) => "&client_id=" + encodeURIComponent(c) }
-];
+/* ---------- Recuperation de la serie ---------- */
+async function recupererSerie() {
+  /* Permet de verifier toute la chaine d'ecriture sans reseau :
+     WEBSTAT_FIXTURE="2026-08=3.38" node scripts/maj-taux.mjs --dry-run */
+  if (process.env.WEBSTAT_FIXTURE) {
+    const [periode, valeur] = process.env.WEBSTAT_FIXTURE.split("=");
+    console.log(`Observation simulee : ${periode} = ${valeur}`);
+    return [{ periode, valeur: Number(valeur) }];
+  }
 
-async function appeler(url, mecanisme, clientId) {
-  const complete = url + mecanisme.parametre(clientId);
+  const essais = [];
+
+  const csv = await telecharger(EXPORT_CSV);
+  if (csv.ok) {
+    const obs = lireCsv(csv.corps);
+    if (obs.length) {
+      console.log(`Export CSV public : ${obs.length} observations lues.`);
+      return obs;
+    }
+    essais.push(`export CSV -> HTTP 200 mais aucune observation : ${csv.corps.slice(0, 200)}`);
+  } else {
+    essais.push(`export CSV -> HTTP ${csv.statut} ${csv.corps.slice(0, 200)}`);
+  }
+
+  const cle = process.env.WEBSTAT_APIKEY;
+  if (cle) {
+    const json = await telecharger(API_JSON, { Authorization: "Apikey " + cle });
+    if (json.ok) {
+      try {
+        const obs = extraireObservations(JSON.parse(json.corps));
+        if (obs.length) {
+          console.log(`API JSON avec cle : ${obs.length} observations lues.`);
+          return obs;
+        }
+        essais.push(`API JSON -> HTTP 200 mais aucune observation : ${json.corps.slice(0, 200)}`);
+      } catch {
+        essais.push(`API JSON -> reponse non JSON : ${json.corps.slice(0, 200)}`);
+      }
+    } else {
+      /* Le guide precise qu'une cle inconnue ne donne pas un 401 mais ce
+         message, qui feint l'absence du jeu de donnees. */
+      const refusee = /NotFoundResource|does not exist/i.test(json.corps);
+      essais.push(`API JSON -> HTTP ${json.statut}` +
+        (refusee ? " (cle refusee : elle doit venir de l'onglet « Cles d'API » du " +
+          "portail webstat.banque-france.fr, pas de developer.webstat.banque-france.fr)" : "") +
+        ` ${json.corps.slice(0, 160)}`);
+    }
+  }
+
+  erreur(`la serie ${SERIE} n'a pu etre recuperee.\n    ` + essais.join("\n    ") +
+    (cle ? "" : "\n  Aucune cle n'etait fournie, ce qui est normal : l'export CSV est " +
+      "public.\n  Si le portail l'a retire, creer une cle dans l'onglet « Cles d'API » de " +
+      "\n  https://webstat.banque-france.fr/ et la placer dans le secret WEBSTAT_APIKEY."));
+}
+
+async function telecharger(url, entetes = {}) {
   try {
-    const reponse = await fetch(complete, {
-      headers: Object.assign({ Accept: "application/json" }, mecanisme.entete(clientId))
-    });
-    const corps = await reponse.text();
-    return { statut: reponse.status, ok: reponse.ok, corps };
+    const reponse = await fetch(url, { headers: Object.assign({ Accept: "*/*" }, entetes) });
+    return { statut: reponse.status, ok: reponse.ok, corps: await reponse.text() };
   } catch (e) {
     return { statut: 0, ok: false, corps: e.message };
   }
 }
 
-async function recupererSerie(clientId) {
-  /* Permet de verifier toute la chaine d'ecriture sans appeler l'API :
-     WEBSTAT_FIXTURE="2026-07=3.30" node scripts/maj-taux.mjs --dry-run */
-  if (process.env.WEBSTAT_FIXTURE) {
-    const [periode, valeur] = process.env.WEBSTAT_FIXTURE.split("=");
-    console.log("Observation simulee : " + periode + " = " + valeur);
-    return [{ periode, valeur: Number(valeur) }];
-  }
-
-  /* Etape 1 : la cle est-elle acceptee ? Le catalogue est l'exemple officiel. */
-  const sonde = `${RACINE_API}/catalogue?format=json`;
-  let mecanisme = null;
-  const refus = [];
-  for (const m of MECANISMES) {
-    const r = await appeler(sonde, m, clientId);
-    if (r.ok) { mecanisme = m; break; }
-    refus.push(`${m.nom} -> HTTP ${r.statut} ${r.corps.slice(0, 160)}`);
-  }
-  if (!mecanisme) {
-    erreur("la cle est refusee par les deux methodes d'authentification, le probleme\n" +
-      "  vient donc de la cle elle-meme, pas du code. A verifier sur\n" +
-      "  https://developer.webstat.banque-france.fr/ :\n" +
-      "    1. avoir cree une Application (My apps), et copie son Client ID,\n" +
-      "       pas l'identifiant du compte ni le Client Secret ;\n" +
-      "    2. avoir abonne cette application au produit WEBSTAT Banque de France FR V1 ;\n" +
-      "    3. avoir colle la valeur sans espace ni retour a la ligne dans le secret\n" +
-      "       GitHub WEBSTAT_CLIENT_ID.\n" +
-      "  Detail des refus :\n    " + refus.join("\n    "));
-  }
-  console.log("Authentification acceptee via " + mecanisme.nom + ".");
-
-  /* Etape 2 : trouver le chemin de la serie. */
-  const chemins = [
-    `${RACINE_API}/data/${JEU}/${CLE}?format=json`,
-    `${RACINE_API}/data/${JEU}/${SERIE}?format=json`,
-    `${RACINE_API}/data/${SERIE}?format=json`
-  ];
-  const essais = [];
-  for (const chemin of chemins) {
-    const r = await appeler(chemin, mecanisme, clientId);
-    if (!r.ok) {
-      essais.push(`${chemin} -> HTTP ${r.statut} ${r.corps.slice(0, 160)}`);
-      continue;
-    }
-    let donnees;
-    try {
-      donnees = JSON.parse(r.corps);
-    } catch {
-      essais.push(`${chemin} -> reponse non JSON : ${r.corps.slice(0, 160)}`);
-      continue;
-    }
-    const obs = extraireObservations(donnees);
-    if (obs.length) {
-      console.log("Chemin retenu : " + chemin);
-      return obs;
-    }
-    essais.push(`${chemin} -> JSON sans observation exploitable : ${r.corps.slice(0, 300)}`);
-  }
-  erreur("la cle fonctionne mais aucun chemin ne rend la serie " + SERIE + ".\n  " +
-    essais.join("\n  "));
+/* CSV a separateur point-virgule, virgule decimale, precede d'un BOM. On lit
+   par nom de colonne : l'ordre des attributs varie d'un jeu a l'autre. */
+function lireCsv(texte) {
+  const lignes = texte.replace(/^﻿/, "").trim().split(/\r?\n/);
+  if (lignes.length < 2) return [];
+  const entetes = lignes[0].split(";");
+  const iPeriode = entetes.indexOf("time_period");
+  const iValeur = entetes.indexOf("obs_value");
+  if (iPeriode < 0 || iValeur < 0) return [];
+  return lignes.slice(1)
+    .map((ligne) => {
+      const champs = ligne.split(";");
+      return {
+        periode: (champs[iPeriode] || "").trim(),
+        valeur: Number((champs[iValeur] || "").trim().replace(",", "."))
+      };
+    })
+    .filter((o) => /^\d{4}-\d{2}$/.test(o.periode) && Number.isFinite(o.valeur));
 }
 
-/* Le format de reponse n'est pas garanti : on gere le SDMX-JSON puis, a defaut,
-   on cherche en profondeur des couples periode / valeur. */
-function extraireObservations(donnees) {
-  const sdmx = extraireSdmx(donnees);
-  if (sdmx.length) return sdmx;
-  return extraireEnProfondeur(donnees);
-}
-
-function extraireSdmx(d) {
-  try {
-    const jeux = d.dataSets || d.dataSet || [];
-    const series = jeux[0]?.series;
-    const periodes = (d.structure?.dimensions?.observation || [])
-      .find((dim) => /TIME|PERIOD/i.test(dim.id))?.values || [];
-    if (!series || !periodes.length) return [];
-    const premiere = Object.values(series)[0];
-    return Object.entries(premiere.observations || {})
-      .map(([index, valeur]) => ({
-        periode: periodes[Number(index)]?.id,
-        valeur: Number(Array.isArray(valeur) ? valeur[0] : valeur)
-      }))
-      .filter((o) => o.periode && Number.isFinite(o.valeur));
-  } catch {
-    return [];
-  }
-}
-
-function extraireEnProfondeur(racine) {
+/* Secours pour l'API JSON : on cherche des couples periode / valeur. */
+function extraireObservations(racine) {
   const trouvees = [];
   const vus = new Set();
   (function parcourir(noeud) {
@@ -168,12 +151,14 @@ function extraireEnProfondeur(racine) {
     vus.add(noeud);
     if (Array.isArray(noeud)) { noeud.forEach(parcourir); return; }
     const cles = Object.keys(noeud);
-    const clePeriode = cles.find((c) => /^(time_?period|period|date|periode)$/i.test(c));
+    const clePeriode = cles.find((c) => /^(time_?period|period|periode)$/i.test(c));
     const cleValeur = cles.find((c) => /^(obs_?value|value|valeur)$/i.test(c));
     if (clePeriode && cleValeur) {
       const valeur = Number(String(noeud[cleValeur]).replace(",", "."));
       const periode = String(noeud[clePeriode]);
-      if (Number.isFinite(valeur) && /\d{4}/.test(periode)) trouvees.push({ periode, valeur });
+      if (Number.isFinite(valeur) && /^\d{4}-\d{2}/.test(periode)) {
+        trouvees.push({ periode: periode.slice(0, 7), valeur });
+      }
     }
     cles.forEach((c) => parcourir(noeud[c]));
   })(racine);
@@ -207,21 +192,20 @@ function lireEtat(source) {
 }
 
 function moisEnFrancais(periode) {
-  const m = periode.match(/^(\d{4})-(\d{2})/);
+  const m = periode.match(/^(\d{4})-(\d{2})$/);
   if (!m) erreur("periode illisible : " + periode);
   const index = Number(m[2]) - 1;
   if (index < 0 || index > 11) erreur("mois hors bornes : " + periode);
-  return { texte: MOIS_FR_ACCENTS[index] + " " + m[1], cle: m[1] + "-" + m[2], sansAccent: MOIS_FR[index] + " " + m[1] };
+  return { texte: `${MOIS_FR[index]} ${m[1]}`, cle: `${m[1]}-${m[2]}` };
 }
 
 function cleDepuisTexte(texte) {
   const parties = texte.trim().split(/\s+/);
   if (parties.length < 2) return "";
-  const index = MOIS_FR_ACCENTS.indexOf(parties[0].toLowerCase());
-  const secours = MOIS_FR.indexOf(parties[0].toLowerCase());
-  const mois = index > -1 ? index : secours;
+  const nom = parties[0].toLowerCase();
+  const mois = MOIS_FR.indexOf(nom) > -1 ? MOIS_FR.indexOf(nom) : MOIS_SANS_ACCENT.indexOf(nom);
   if (mois < 0) return "";
-  return parties[1] + "-" + String(mois + 1).padStart(2, "0");
+  return `${parties[1]}-${String(mois + 1).padStart(2, "0")}`;
 }
 
 /* ---------- Ecriture ---------- */
@@ -245,13 +229,7 @@ async function majVersionAssets(version) {
 
 /* ---------- Programme ---------- */
 async function principal() {
-  const clientId = process.env.WEBSTAT_CLIENT_ID;
-  if (!clientId && !process.env.WEBSTAT_FIXTURE) {
-    erreur("WEBSTAT_CLIENT_ID absent de l'environnement. Compte gratuit sur " +
-      "https://developer.webstat.banque-france.fr/ puis secret GitHub du meme nom.");
-  }
-
-  const observations = await recupererSerie(clientId);
+  const observations = await recupererSerie();
   observations.sort((a, b) => a.periode.localeCompare(b.periode));
   const derniere = observations[observations.length - 1];
   console.log(`Derniere observation : ${derniere.periode} = ${derniere.valeur} %`);
@@ -268,7 +246,7 @@ async function principal() {
 
   if (cleActuelle && mois.cle <= cleActuelle) {
     console.log(`Rien a faire : le fichier porte deja ${etat.mois} (${cleActuelle}), ` +
-      `l'API donne ${mois.cle}.`);
+      `la source donne ${mois.cle}.`);
     return;
   }
 

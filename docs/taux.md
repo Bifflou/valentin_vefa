@@ -7,8 +7,9 @@ chiffres, ce qui est mesuré et ce qui est modélisé.
 ## Ce qui est mesuré
 
 Le **niveau** vient de la Banque de France, série
-`MIR1.M.FR.B.A22HR.A.R.A.2254U6.EUR.N` : « taux des crédits nouveaux à l'habitat
-(hors renégociations) aux particuliers ».
+`MIR1.M.FR.B.A22HR.A.R.A.2254U6.EUR.N`, intitulée exactement « Taux des crédits
+nouveaux à l'habitat (hors négociations) aux particuliers » — l'abréviation est
+celle de la Banque de France, il s'agit bien des renégociations.
 
 C'est un *taux effectif au sens étroit* : moyenne pondérée par les flux,
 **hors frais de dossier et hors assurance emprunteur**. C'est la base correcte
@@ -67,37 +68,55 @@ Le simulateur annonce « un taux estimé d'après la Banque de France (données 
 la valeur retenue pour la durée choisie. Un visiteur qui détient une proposition
 bancaire saisit son propre taux, et l'avertissement le dit alors explicitement.
 
-## Mise en service (deux réglages à faire une fois)
+## Comment la donnée est récupérée
 
-1. **Identifiant d'API.** Un compte seul ne suffit pas : sur
-   <https://developer.webstat.banque-france.fr/>, il faut créer une
-   **Application** (*My apps*), l'**abonner au produit** *WEBSTAT Banque de
-   France FR V1*, puis copier son **Client ID** — ni l'identifiant du compte, ni
-   le Client Secret. L'enregistrer ensuite dans le dépôt sous *Settings →
-   Secrets and variables → Actions → New repository secret*, avec le nom exact
-   `WEBSTAT_CLIENT_ID`. L'identifiant n'apparaît jamais dans le code ni dans les
-   journaux.
+**Aucune clé d'API n'est nécessaire.** Le portail expose un export CSV public,
+qui rend toute l'histoire de la série triée de la période la plus récente à la
+plus ancienne :
 
-   La clé se transmet dans l'en-tête `X-IBM-Client-Id`, méthode que la Banque de
-   France recommande ; le script essaie aussi le paramètre `client_id`, accepté
-   lui aussi, pour distinguer un problème de clé d'un problème de méthode.
-2. **Autoriser les pull requests.** Dans *Settings → Actions → General →
-   Workflow permissions*, cocher « Allow GitHub Actions to create and approve
-   pull requests ». Sans cela le script s'exécute mais ne peut rien proposer.
+```
+https://webstat.banque-france.fr/export/csv/fr/catalog/MIR1/MIR1.M.FR.B.A22HR.A.R.A.2254U6.EUR.N
+```
+
+Séparateur point-virgule, virgule décimale, précédé d'un BOM. Le script lit les
+colonnes `time_period` et `obs_value` **par leur nom**, l'ordre des attributs
+variant d'un jeu de données à l'autre.
+
+### Le piège des deux portails
+
+Il existe deux API Webstat, et elles n'acceptent pas les mêmes clés :
+
+| | Ancienne | Nouvelle |
+|---|---|---|
+| Hôte | `api.webstat.banque-france.fr` | `webstat.banque-france.fr/api/explore/v2.1` |
+| Authentification | en-tête `X-IBM-Client-Id` | en-tête `Authorization: Apikey …` |
+| Clé obtenue via | une *Application* sur `developer.webstat.banque-france.fr` | l'onglet *Clés d'API* du portail |
+| Refus d'une clé | `401 Invalid client id or secret` | `404 NotFoundResource` |
+
+Une clé du nouveau portail présentée à l'ancienne passerelle donne toujours
+`401 Invalid client id or secret`, quoi qu'on fasse : c'est le piège dans lequel
+ce script est tombé avant de passer à l'export CSV. Si le CSV public disparaît
+un jour, la solution est une clé du **nouveau** portail placée dans un secret
+GitHub nommé `WEBSTAT_APIKEY` : le script l'utilisera alors en secours, sur
+l'API JSON.
+
+## Mise en service (un seul réglage)
+
+Dans *Settings → Actions → General → Workflow permissions*, cocher « Allow
+GitHub Actions to create and approve pull requests ». Sans cela le script
+s'exécute mais ne peut rien proposer.
 
 Ensuite, lancer une fois le workflow à la main (*Actions → Mise a jour des taux
 indicatifs → Run workflow*) en cochant l'essai à blanc : il affichera la valeur
-lue et le chemin d'API retenu, sans rien modifier.
+lue sans rien modifier.
 
-Le script sonde d'abord `/catalogue`, dont l'appel est documenté, avant de
-chercher la série. Cela sépare nettement les deux pannes possibles : si le
-catalogue est refusé, le problème est la clé, et le message liste quoi vérifier ;
-s'il répond mais qu'aucun chemin ne rend la série, le problème est le chemin, et
-le message donne les réponses reçues. Le chemin exact d'une série n'est pas
-documenté publiquement : une fois connu, le fixer dans `recupererSerie` pour
-supprimer les essais inutiles.
+Le script tourne aussi en local, sans rien configurer :
 
-Pour vérifier la chaîne d'écriture sans identifiant :
+```
+node scripts/maj-taux.mjs --dry-run
+```
+
+Et pour éprouver la chaîne d'écriture sans réseau, avec une valeur choisie :
 
 ```
 WEBSTAT_FIXTURE="2026-08=3.38" node scripts/maj-taux.mjs --dry-run

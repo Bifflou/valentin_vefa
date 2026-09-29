@@ -30,14 +30,14 @@ jobs:
       - name: Essai a blanc
         if: inputs.dry_run
         env:
-          WEBSTAT_CLIENT_ID: ${{ secrets.WEBSTAT_CLIENT_ID }}
+          WEBSTAT_APIKEY: ${{ secrets.WEBSTAT_APIKEY }}
         run: node scripts/maj-taux.mjs --dry-run
 
       - name: Recuperer les taux
         id: taux
         if: ${{ !inputs.dry_run }}
         env:
-          WEBSTAT_CLIENT_ID: ${{ secrets.WEBSTAT_CLIENT_ID }}
+          WEBSTAT_APIKEY: ${{ secrets.WEBSTAT_APIKEY }}
         run: node scripts/maj-taux.mjs
 
       - name: Ouvrir la pull request
