@@ -21,6 +21,8 @@ const FICHIER_JS = path.join(RACINE, "assets", "js", "simulateur.js");
 
 const SERIE = "MIR1.M.FR.B.A22HR.A.R.A.2254U6.EUR.N";
 const JEU = "MIR1";
+const CLE = SERIE.replace(/^MIR1\./, "");   /* la convention SDMX omet le prefixe du jeu */
+const RACINE_API = "https://api.webstat.banque-france.fr/webstat-fr/v1";
 
 /* Calibrage documente dans docs/taux.md */
 const DUREE_ANCRE = 23.42;      /* duree initiale moyenne des credits nouveaux */
@@ -39,15 +41,36 @@ const MOIS_FR_ACCENTS = ["janvier", "février", "mars", "avril", "mai", "juin",
 
 const sec = process.argv.includes("--dry-run");
 
+/* On leve au lieu d'appeler process.exit : sortir pendant qu'une socket HTTP
+   est encore ouverte fait avorter Node sous Windows, avec un code trompeur. */
+class Echec extends Error {}
 function erreur(message) {
-  console.error("ECHEC : " + message);
-  process.exit(1);
+  throw new Echec(message);
 }
 
 /* ---------- Appel de l'API ----------
-   Le portail documente la base https://api.webstat.banque-france.fr/webstat-
-   sans detailler le chemin. On essaie les formes connues et on retient la
-   premiere qui repond, en signalant laquelle : a fixer ici une fois validee. */
+   La Banque de France accepte la cle dans l'en-tete X-IBM-Client-Id, methode
+   qu'elle recommande, ou dans le parametre client_id. Le chemin exact d'une
+   serie n'est pas documente publiquement : on sonde d'abord le catalogue, qui
+   l'est, pour distinguer un probleme de cle d'un probleme de chemin. */
+const MECANISMES = [
+  { nom: "en-tete X-IBM-Client-Id", entete: (c) => ({ "X-IBM-Client-Id": c }), parametre: () => "" },
+  { nom: "parametre client_id", entete: () => ({}), parametre: (c) => "&client_id=" + encodeURIComponent(c) }
+];
+
+async function appeler(url, mecanisme, clientId) {
+  const complete = url + mecanisme.parametre(clientId);
+  try {
+    const reponse = await fetch(complete, {
+      headers: Object.assign({ Accept: "application/json" }, mecanisme.entete(clientId))
+    });
+    const corps = await reponse.text();
+    return { statut: reponse.status, ok: reponse.ok, corps };
+  } catch (e) {
+    return { statut: 0, ok: false, corps: e.message };
+  }
+}
+
 async function recupererSerie(clientId) {
   /* Permet de verifier toute la chaine d'ecriture sans appeler l'API :
      WEBSTAT_FIXTURE="2026-07=3.30" node scripts/maj-taux.mjs --dry-run */
@@ -56,41 +79,58 @@ async function recupererSerie(clientId) {
     console.log("Observation simulee : " + periode + " = " + valeur);
     return [{ periode, valeur: Number(valeur) }];
   }
-  const bases = [
-    `https://api.webstat.banque-france.fr/webstat-fr/v1/data/${JEU}/${SERIE}`,
-    `https://api.webstat.banque-france.fr/webstat-fr/v1/data/${SERIE}`,
-    `https://api.webstat.banque-france.fr/webstat-en/v1/data/${JEU}/${SERIE}`
+
+  /* Etape 1 : la cle est-elle acceptee ? Le catalogue est l'exemple officiel. */
+  const sonde = `${RACINE_API}/catalogue?format=json`;
+  let mecanisme = null;
+  const refus = [];
+  for (const m of MECANISMES) {
+    const r = await appeler(sonde, m, clientId);
+    if (r.ok) { mecanisme = m; break; }
+    refus.push(`${m.nom} -> HTTP ${r.statut} ${r.corps.slice(0, 160)}`);
+  }
+  if (!mecanisme) {
+    erreur("la cle est refusee par les deux methodes d'authentification, le probleme\n" +
+      "  vient donc de la cle elle-meme, pas du code. A verifier sur\n" +
+      "  https://developer.webstat.banque-france.fr/ :\n" +
+      "    1. avoir cree une Application (My apps), et copie son Client ID,\n" +
+      "       pas l'identifiant du compte ni le Client Secret ;\n" +
+      "    2. avoir abonne cette application au produit WEBSTAT Banque de France FR V1 ;\n" +
+      "    3. avoir colle la valeur sans espace ni retour a la ligne dans le secret\n" +
+      "       GitHub WEBSTAT_CLIENT_ID.\n" +
+      "  Detail des refus :\n    " + refus.join("\n    "));
+  }
+  console.log("Authentification acceptee via " + mecanisme.nom + ".");
+
+  /* Etape 2 : trouver le chemin de la serie. */
+  const chemins = [
+    `${RACINE_API}/data/${JEU}/${CLE}?format=json`,
+    `${RACINE_API}/data/${JEU}/${SERIE}?format=json`,
+    `${RACINE_API}/data/${SERIE}?format=json`
   ];
   const essais = [];
-  for (const base of bases) {
-    const url = `${base}?format=json&lastNObservations=2&client_id=${encodeURIComponent(clientId)}`;
-    let reponse;
-    try {
-      reponse = await fetch(url, { headers: { Accept: "application/json" } });
-    } catch (e) {
-      essais.push(`${base} -> ${e.message}`);
-      continue;
-    }
-    const corps = await reponse.text();
-    if (!reponse.ok) {
-      essais.push(`${base} -> HTTP ${reponse.status} ${corps.slice(0, 200)}`);
+  for (const chemin of chemins) {
+    const r = await appeler(chemin, mecanisme, clientId);
+    if (!r.ok) {
+      essais.push(`${chemin} -> HTTP ${r.statut} ${r.corps.slice(0, 160)}`);
       continue;
     }
     let donnees;
     try {
-      donnees = JSON.parse(corps);
+      donnees = JSON.parse(r.corps);
     } catch {
-      essais.push(`${base} -> reponse non JSON : ${corps.slice(0, 200)}`);
+      essais.push(`${chemin} -> reponse non JSON : ${r.corps.slice(0, 160)}`);
       continue;
     }
     const obs = extraireObservations(donnees);
     if (obs.length) {
-      console.log("Chemin retenu : " + base);
+      console.log("Chemin retenu : " + chemin);
       return obs;
     }
-    essais.push(`${base} -> JSON sans observation exploitable`);
+    essais.push(`${chemin} -> JSON sans observation exploitable : ${r.corps.slice(0, 300)}`);
   }
-  erreur("aucun chemin d'API n'a repondu.\n  " + essais.join("\n  "));
+  erreur("la cle fonctionne mais aucun chemin ne rend la serie " + SERIE + ".\n  " +
+    essais.join("\n  "));
 }
 
 /* Le format de reponse n'est pas garanti : on gere le SDMX-JSON puis, a defaut,
@@ -204,71 +244,82 @@ async function majVersionAssets(version) {
 }
 
 /* ---------- Programme ---------- */
-const clientId = process.env.WEBSTAT_CLIENT_ID;
-if (!clientId && !process.env.WEBSTAT_FIXTURE) {
-  erreur("WEBSTAT_CLIENT_ID absent de l'environnement. Compte gratuit sur " +
-    "https://developer.webstat.banque-france.fr/ puis secret GitHub du meme nom.");
+async function principal() {
+  const clientId = process.env.WEBSTAT_CLIENT_ID;
+  if (!clientId && !process.env.WEBSTAT_FIXTURE) {
+    erreur("WEBSTAT_CLIENT_ID absent de l'environnement. Compte gratuit sur " +
+      "https://developer.webstat.banque-france.fr/ puis secret GitHub du meme nom.");
+  }
+
+  const observations = await recupererSerie(clientId);
+  observations.sort((a, b) => a.periode.localeCompare(b.periode));
+  const derniere = observations[observations.length - 1];
+  console.log(`Derniere observation : ${derniere.periode} = ${derniere.valeur} %`);
+
+  if (!(derniere.valeur >= ANCRE_MIN && derniere.valeur <= ANCRE_MAX)) {
+    erreur(`taux ancre hors bornes plausibles : ${derniere.valeur} % ` +
+      `(attendu entre ${ANCRE_MIN} et ${ANCRE_MAX}).`);
+  }
+
+  const source = await readFile(FICHIER_JS, "utf8");
+  const etat = lireEtat(source);
+  const mois = moisEnFrancais(derniere.periode);
+  const cleActuelle = cleDepuisTexte(etat.mois);
+
+  if (cleActuelle && mois.cle <= cleActuelle) {
+    console.log(`Rien a faire : le fichier porte deja ${etat.mois} (${cleActuelle}), ` +
+      `l'API donne ${mois.cle}.`);
+    return;
+  }
+
+  const taux = calculerTaux(derniere.valeur);
+  const variation = Math.abs(taux[20] - etat.taux[20]);
+  if (variation > VARIATION_MAX) {
+    erreur(`variation de ${variation.toFixed(2)} point sur le taux 20 ans ` +
+      `(${etat.taux[20]} % -> ${taux[20]} %), au-dela du seuil de ${VARIATION_MAX}. ` +
+      `Verification humaine requise avant publication.`);
+  }
+
+  const version = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const nouveau = source
+    .replace(/var RATES = \{[^}]*\};(\s*)\/\* AUTO:RATES \*\//,
+      `var RATES = { 15: ${taux[15]}, 20: ${taux[20]}, 25: ${taux[25]} };$1/* AUTO:RATES */`)
+    .replace(/var RATES_MOIS = "[^"]*";(\s*)\/\* AUTO:MOIS \*\//,
+      `var RATES_MOIS = "${mois.texte}";$1/* AUTO:MOIS */`);
+
+  if (nouveau === source) erreur("la reecriture n'a rien change, verifier les marqueurs AUTO.");
+  if (!sec) await writeFile(FICHIER_JS, nouveau);
+
+  const pages = await majVersionAssets(version);
+
+  console.log("");
+  console.log(`Ancre Banque de France : ${derniere.valeur} % (${mois.texte})`);
+  console.log(`Taux 15 ans : ${etat.taux[15]} % -> ${taux[15]} %`);
+  console.log(`Taux 20 ans : ${etat.taux[20]} % -> ${taux[20]} %`);
+  console.log(`Taux 25 ans : ${etat.taux[25]} % -> ${taux[25]} %`);
+  console.log(`Version des assets : ?v=${version} (${pages.length} pages)`);
+  if (sec) console.log("\n(--dry-run : aucun fichier ecrit)");
+
+  /* Sortie exploitable par le workflow pour le titre et le corps de la PR. */
+  if (process.env.GITHUB_OUTPUT && !sec) {
+    const lignes = [
+      `mois=${mois.texte}`,
+      `ancre=${derniere.valeur}`,
+      `taux15=${taux[15]}`,
+      `taux20=${taux[20]}`,
+      `taux25=${taux[25]}`,
+      `avant15=${etat.taux[15]}`,
+      `avant20=${etat.taux[20]}`,
+      `avant25=${etat.taux[25]}`,
+      `version=${version}`
+    ];
+    await writeFile(process.env.GITHUB_OUTPUT, lignes.join("\n") + "\n", { flag: "a" });
+  }
 }
 
-const observations = await recupererSerie(clientId);
-observations.sort((a, b) => a.periode.localeCompare(b.periode));
-const derniere = observations[observations.length - 1];
-console.log(`Derniere observation : ${derniere.periode} = ${derniere.valeur} %`);
-
-if (!(derniere.valeur >= ANCRE_MIN && derniere.valeur <= ANCRE_MAX)) {
-  erreur(`taux ancre hors bornes plausibles : ${derniere.valeur} % (attendu entre ${ANCRE_MIN} et ${ANCRE_MAX}).`);
-}
-
-const source = await readFile(FICHIER_JS, "utf8");
-const etat = lireEtat(source);
-const mois = moisEnFrancais(derniere.periode);
-const cleActuelle = cleDepuisTexte(etat.mois);
-
-if (cleActuelle && mois.cle <= cleActuelle) {
-  console.log(`Rien a faire : le fichier porte deja ${etat.mois} (${cleActuelle}), l'API donne ${mois.cle}.`);
-  process.exit(0);
-}
-
-const taux = calculerTaux(derniere.valeur);
-const variation = Math.abs(taux[20] - etat.taux[20]);
-if (variation > VARIATION_MAX) {
-  erreur(`variation de ${variation.toFixed(2)} point sur le taux 20 ans ` +
-    `(${etat.taux[20]} % -> ${taux[20]} %), au-dela du seuil de ${VARIATION_MAX}. ` +
-    `Verification humaine requise avant publication.`);
-}
-
-const version = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-const nouveau = source
-  .replace(/var RATES = \{[^}]*\};(\s*)\/\* AUTO:RATES \*\//,
-    `var RATES = { 15: ${taux[15]}, 20: ${taux[20]}, 25: ${taux[25]} };$1/* AUTO:RATES */`)
-  .replace(/var RATES_MOIS = "[^"]*";(\s*)\/\* AUTO:MOIS \*\//,
-    `var RATES_MOIS = "${mois.texte}";$1/* AUTO:MOIS */`);
-
-if (nouveau === source) erreur("la reecriture n'a rien change, verifier les marqueurs AUTO.");
-if (!sec) await writeFile(FICHIER_JS, nouveau);
-
-const pages = await majVersionAssets(version);
-
-console.log("");
-console.log(`Ancre Banque de France : ${derniere.valeur} % (${mois.texte})`);
-console.log(`Taux 15 ans : ${etat.taux[15]} % -> ${taux[15]} %`);
-console.log(`Taux 20 ans : ${etat.taux[20]} % -> ${taux[20]} %`);
-console.log(`Taux 25 ans : ${etat.taux[25]} % -> ${taux[25]} %`);
-console.log(`Version des assets : ?v=${version} (${pages.length} pages)`);
-if (sec) console.log("\n(--dry-run : aucun fichier ecrit)");
-
-/* Sortie exploitable par le workflow pour le titre et le corps de la PR. */
-if (process.env.GITHUB_OUTPUT) {
-  const lignes = [
-    `mois=${mois.texte}`,
-    `ancre=${derniere.valeur}`,
-    `taux15=${taux[15]}`,
-    `taux20=${taux[20]}`,
-    `taux25=${taux[25]}`,
-    `avant15=${etat.taux[15]}`,
-    `avant20=${etat.taux[20]}`,
-    `avant25=${etat.taux[25]}`,
-    `version=${version}`
-  ];
-  await writeFile(process.env.GITHUB_OUTPUT, lignes.join("\n") + "\n", { flag: "a" });
+try {
+  await principal();
+} catch (e) {
+  console.error("ECHEC : " + (e instanceof Echec ? e.message : (e.stack || e.message)));
+  process.exitCode = 1;
 }

@@ -69,21 +69,33 @@ bancaire saisit son propre taux, et l'avertissement le dit alors explicitement.
 
 ## Mise en service (deux réglages à faire une fois)
 
-1. **Identifiant d'API.** Créer un compte gratuit sur
-   <https://developer.webstat.banque-france.fr/>, récupérer le `client_ID`, puis
-   l'enregistrer dans le dépôt sous *Settings → Secrets and variables →
-   Actions → New repository secret*, avec le nom exact `WEBSTAT_CLIENT_ID`.
-   L'identifiant n'apparaît jamais dans le code ni dans les journaux.
+1. **Identifiant d'API.** Un compte seul ne suffit pas : sur
+   <https://developer.webstat.banque-france.fr/>, il faut créer une
+   **Application** (*My apps*), l'**abonner au produit** *WEBSTAT Banque de
+   France FR V1*, puis copier son **Client ID** — ni l'identifiant du compte, ni
+   le Client Secret. L'enregistrer ensuite dans le dépôt sous *Settings →
+   Secrets and variables → Actions → New repository secret*, avec le nom exact
+   `WEBSTAT_CLIENT_ID`. L'identifiant n'apparaît jamais dans le code ni dans les
+   journaux.
+
+   La clé se transmet dans l'en-tête `X-IBM-Client-Id`, méthode que la Banque de
+   France recommande ; le script essaie aussi le paramètre `client_id`, accepté
+   lui aussi, pour distinguer un problème de clé d'un problème de méthode.
 2. **Autoriser les pull requests.** Dans *Settings → Actions → General →
    Workflow permissions*, cocher « Allow GitHub Actions to create and approve
    pull requests ». Sans cela le script s'exécute mais ne peut rien proposer.
 
 Ensuite, lancer une fois le workflow à la main (*Actions → Mise a jour des taux
 indicatifs → Run workflow*) en cochant l'essai à blanc : il affichera la valeur
-lue et le chemin d'API retenu, sans rien modifier. Le chemin exact de l'API
-n'est pas documenté publiquement, le script en essaie plusieurs et annonce
-lequel répond : une fois connu, le fixer dans `recupererSerie` pour supprimer
-les essais inutiles.
+lue et le chemin d'API retenu, sans rien modifier.
+
+Le script sonde d'abord `/catalogue`, dont l'appel est documenté, avant de
+chercher la série. Cela sépare nettement les deux pannes possibles : si le
+catalogue est refusé, le problème est la clé, et le message liste quoi vérifier ;
+s'il répond mais qu'aucun chemin ne rend la série, le problème est le chemin, et
+le message donne les réponses reçues. Le chemin exact d'une série n'est pas
+documenté publiquement : une fois connu, le fixer dans `recupererSerie` pour
+supprimer les essais inutiles.
 
 Pour vérifier la chaîne d'écriture sans identifiant :
 
