@@ -73,16 +73,23 @@ jobs:
           Le script verifie les bornes et la croissance avec la duree, remonte le
           parametre \`?v=\` des pages et enregistre la nouvelle reference.
           EOF
+          # L'etiquette est creee avant toute chose : filtrer sur une etiquette
+          # inexistante fait repondre 422 a l'API, ce qui tuerait l'etape au tout
+          # premier passage. Un echec de creation ne doit pas etre fatal non plus.
+          gh label create taux \
+            --description "Grille de taux du simulateur" \
+            --color BFD4F2 --force || echo "Etiquette taux non creee, on continue."
+
           # Une seule issue ouverte a la fois : si celle du mois precedent n'a pas
           # ete traitee, on la commente plutot que d'en empiler une autre.
-          EXISTANTE=$(gh issue list --state open --label taux --limit 1 --json number --jq '.[0].number // empty')
+          EXISTANTE=$(gh issue list --state open --label taux --limit 1 \
+            --json number --jq '.[0].number // empty' 2>/dev/null || true)
+
           if [ -n "$EXISTANTE" ]; then
             gh issue comment "$EXISTANTE" --body-file /tmp/corps.md
             echo "Commentaire ajoute a l'issue #$EXISTANTE."
           else
-            gh label create taux --description "Grille de taux du simulateur" --color BFD4F2 --force
-            gh issue create \
-              --title "Taux : verifier la grille (Banque de France $BDF_MOIS)" \
-              --body-file /tmp/corps.md \
-              --label taux
+            TITRE="Taux : verifier la grille (Banque de France $BDF_MOIS)"
+            gh issue create --title "$TITRE" --body-file /tmp/corps.md --label taux \
+              || gh issue create --title "$TITRE" --body-file /tmp/corps.md
           fi
