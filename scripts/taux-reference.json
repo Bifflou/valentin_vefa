@@ -1,0 +1,18 @@
+{
+  "commentaire": "Etat au moment de la derniere decision humaine sur la grille. Lu par scripts/maj-taux.mjs pour mesurer la derive. Ne pas editer a la main.",
+  "mois": "septembre 2026",
+  "grille": {
+    "15": 3.33,
+    "20": 3.47,
+    "25": 3.56
+  },
+  "ancreBdf": {
+    "periode": "2026-07",
+    "valeur": 3.3
+  },
+  "oat": {
+    "periode": "2026-08",
+    "valeur": 4
+  },
+  "decideLe": "2026-09-29"
+}

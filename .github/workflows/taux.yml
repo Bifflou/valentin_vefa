@@ -1,24 +1,25 @@
-name: Mise a jour des taux indicatifs
+name: Surveillance des taux
 
 # La Banque de France publie les donnees d'un mois environ cinq semaines apres
 # sa fin : les chiffres de juillet 2026 sont parus le 7 septembre 2026. On passe
 # le 12 pour laisser de la marge.
+#
+# Ce workflow ne modifie JAMAIS les taux du site. Il mesure la derive entre la
+# grille en ligne et la statistique publique, et ouvre une issue quand elle
+# depasse le seuil. Le choix du chiffre reste humain, parce que la statistique
+# officielle est en retard de deux mois sur les baremes bancaires, et que l'OAT
+# ne permet pas de corriger ce retard : voir docs/taux.md.
 on:
   schedule:
     - cron: "0 7 12 * *"
   workflow_dispatch:
-    inputs:
-      dry_run:
-        description: "Afficher le resultat sans ouvrir de pull request"
-        type: boolean
-        default: false
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+  issues: write
 
 jobs:
-  taux:
+  surveiller:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,67 +28,61 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Essai a blanc
-        if: inputs.dry_run
-        env:
-          WEBSTAT_APIKEY: ${{ secrets.WEBSTAT_APIKEY }}
-        run: node scripts/maj-taux.mjs --dry-run
-
-      - name: Recuperer les taux
+      - name: Mesurer la derive
         id: taux
-        if: ${{ !inputs.dry_run }}
-        env:
-          WEBSTAT_APIKEY: ${{ secrets.WEBSTAT_APIKEY }}
         run: node scripts/maj-taux.mjs
 
-      - name: Ouvrir la pull request
-        if: ${{ !inputs.dry_run && steps.taux.outputs.mois != '' }}
+      - name: Ouvrir une issue si la grille a derive
+        if: steps.taux.outputs.alerte == 'oui'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MOIS: ${{ steps.taux.outputs.mois }}
-          ANCRE: ${{ steps.taux.outputs.ancre }}
-          T15: ${{ steps.taux.outputs.taux15 }}
-          T20: ${{ steps.taux.outputs.taux20 }}
-          T25: ${{ steps.taux.outputs.taux25 }}
-          A15: ${{ steps.taux.outputs.avant15 }}
-          A20: ${{ steps.taux.outputs.avant20 }}
-          A25: ${{ steps.taux.outputs.avant25 }}
+          DERIVE: ${{ steps.taux.outputs.derive }}
+          BDF: ${{ steps.taux.outputs.bdf }}
+          BDF_MOIS: ${{ steps.taux.outputs.bdf_mois }}
+          OAT: ${{ steps.taux.outputs.oat }}
+          OAT_MOIS: ${{ steps.taux.outputs.oat_mois }}
+          GRILLE: ${{ steps.taux.outputs.grille }}
+          GRILLE_MOIS: ${{ steps.taux.outputs.grille_mois }}
+          REFERENCE: ${{ steps.taux.outputs.reference }}
         run: |
-          if git diff --quiet; then
-            echo "Aucune modification, rien a proposer."
-            exit 0
-          fi
-          # Le numero d'execution rend la branche unique : jamais de force-push.
-          BRANCHE="taux/$(date +%Y-%m)-$GITHUB_RUN_NUMBER"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$BRANCHE"
-          git add -A
-          git commit -m "Taux indicatifs : donnees de $MOIS"
-          git push -u origin "$BRANCHE"
           cat > /tmp/corps.md <<EOF
-          Mise a jour automatique des taux indicatifs du simulateur.
+          La statistique Banque de France a bouge de **$DERIVE point** depuis la
+          derniere decision prise sur la grille.
 
-          **Source** : Banque de France, taux des credits nouveaux a l'habitat
-          (hors renegociations) aux particuliers, donnees de $MOIS, soit
-          **$ANCRE %**. Serie \`MIR1.M.FR.B.A22HR.A.R.A.2254U6.EUR.N\`.
+          | | Valeur |
+          |---|---|
+          | Grille en ligne | $GRILLE % ($GRILLE_MOIS) |
+          | Banque de France | $BDF % ($BDF_MOIS) |
+          | OAT 10 ans | $OAT % ($OAT_MOIS) |
+          | Reference posee | $REFERENCE |
 
-          | Duree | Avant | Apres |
-          |---|---|---|
-          | 15 ans | $A15 % | **$T15 %** |
-          | 20 ans | $A20 % | **$T20 %** |
-          | 25 ans | $A25 % | **$T25 %** |
-
-          La methode de derivation des trois durees est decrite dans
+          **Ne pas recopier le chiffre Banque de France.** Il decrit un mois deja
+          ancien, et c'est une moyenne realisee sur des prets signes plus tot,
+          donc plus basse que les baremes proposes aujourd'hui. Mesure faite sur
+          151 mois : l'OAT ne permet pas de corriger ce retard, sa transmission
+          vers le taux de credit est de 0,075 avec un R2 de 0,03 a un mois. Voir
           [docs/taux.md]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/main/docs/taux.md).
-          Le parametre \`?v=\` des pages est remonte pour que la nouvelle grille
-          atteigne tout de suite les visiteurs deja venus.
 
-          A relire avant de fusionner : les trois valeurs doivent rester
-          coherentes avec les barometres publies du mois.
+          Marche a suivre : relever les baremes publies du mois en cours sur 15,
+          20 et 25 ans, prendre le milieu des fourchettes, puis appliquer
+
+          \`\`\`
+          node scripts/maj-taux.mjs --fixer 15ans/20ans/25ans --mois "<mois> <annee>"
+          \`\`\`
+
+          Le script verifie les bornes et la croissance avec la duree, remonte le
+          parametre \`?v=\` des pages et enregistre la nouvelle reference.
           EOF
-          gh pr create \
-            --title "Taux indicatifs : donnees de $MOIS" \
-            --body-file /tmp/corps.md \
-            --base main \
-            --head "$BRANCHE"
+          # Une seule issue ouverte a la fois : si celle du mois precedent n'a pas
+          # ete traitee, on la commente plutot que d'en empiler une autre.
+          EXISTANTE=$(gh issue list --state open --label taux --limit 1 --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTANTE" ]; then
+            gh issue comment "$EXISTANTE" --body-file /tmp/corps.md
+            echo "Commentaire ajoute a l'issue #$EXISTANTE."
+          else
+            gh label create taux --description "Grille de taux du simulateur" --color BFD4F2 --force
+            gh issue create \
+              --title "Taux : verifier la grille (Banque de France $BDF_MOIS)" \
+              --body-file /tmp/corps.md \
+              --label taux
+          fi

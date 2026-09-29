@@ -1,18 +1,27 @@
 #!/usr/bin/env node
 /*
- * Met a jour les taux indicatifs du simulateur depuis la Banque de France.
+ * Surveille la derive entre la grille de taux du site et les statistiques
+ * publiques, et applique une grille decidee par un humain.
  *
- * Source : serie MIR1.M.FR.B.A22HR.A.R.A.2254U6.EUR.N, « Taux des credits
- * nouveaux a l'habitat (hors negociations) aux particuliers ». Taux effectif
- * au sens etroit : hors frais de dossier et hors assurance emprunteur, ce qui
- * en fait la base correcte d'une formule d'amortissement.
+ * Pourquoi pas d'ecriture automatique : la statistique Banque de France parait
+ * avec cinq semaines de retard, et l'OAT 10 ans ne permet pas de combler ce
+ * retard. Mesure faite sur 151 mois (2014-2026), transmission de l'OAT vers le
+ * taux de credit : beta 0,075 et R2 0,03 a un mois, beta 0,46 et R2 0,31 a
+ * douze mois. L'ecart credit moins OAT est passe de +1,11 point (2014-2019) a
+ * +0,11 point (2024-2026), avec un ecart-type de 0,57 : il n'existe pas de
+ * marge stable a exploiter. Detail dans docs/taux.md.
  *
- * Methode de derivation des trois durees : docs/taux.md
+ * Usage :
+ *   node scripts/maj-taux.mjs
+ *       Rapport de surveillance. N'ecrit rien. Signale une derive.
  *
- *   node scripts/maj-taux.mjs --dry-run    n'ecrit rien, affiche ce qu'il ferait
- *   node scripts/maj-taux.mjs              ecrit les fichiers
+ *   node scripts/maj-taux.mjs --fixer 3.33/3.47/3.56 --mois "octobre 2026"
+ *       Applique une grille decidee par un humain : reecrit les lignes AUTO,
+ *       remonte le parametre ?v= des pages, enregistre la reference.
  *
- * Aucune cle d'API n'est requise : l'export CSV du portail est public.
+ *   --dry-run  avec --fixer : affiche sans ecrire.
+ *
+ * Aucune cle d'API n'est requise : les deux sources sont publiques.
  */
 
 import { readFile, writeFile, readdir } from "node:fs/promises";
@@ -21,162 +30,88 @@ import path from "node:path";
 
 const RACINE = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const FICHIER_JS = path.join(RACINE, "assets", "js", "simulateur.js");
+const FICHIER_REF = path.join(RACINE, "scripts", "taux-reference.json");
 
-const JEU = "MIR1";
-const SERIE = "MIR1.M.FR.B.A22HR.A.R.A.2254U6.EUR.N";
+/* Taux des credits nouveaux a l'habitat hors renegociations, aux particuliers.
+   Taux effectif au sens etroit : hors frais et hors assurance. Export CSV
+   public du portail Webstat, trie du plus recent au plus ancien. */
+const SERIE_BDF = "MIR1.M.FR.B.A22HR.A.R.A.2254U6.EUR.N";
+const URL_BDF = `https://webstat.banque-france.fr/export/csv/fr/catalog/MIR1/${SERIE_BDF}`;
 
-/* Export CSV public du portail, trie de la periode la plus recente a la plus
-   ancienne. L'API JSON existe aussi mais exige une cle : elle ne sert ici que
-   de secours, si WEBSTAT_APIKEY est fourni.
-   Guide : https://webstat.banque-france.fr/fr/pages/guide-migration-api/ */
-const EXPORT_CSV = `https://webstat.banque-france.fr/export/csv/fr/catalog/${JEU}/${SERIE}`;
-const API_JSON = "https://webstat.banque-france.fr/api/explore/v2.1" +
-  "/catalog/datasets/observations/exports/json" +
-  `?where=series_key%3D%22${SERIE}%22&order_by=time_period_start%20desc&limit=6`;
+/* Rendement de l'OAT 10 ans francaise, via la BCE : taux long terme au sens du
+   critere de Maastricht. Publie plus tot que la statistique de credit. */
+const URL_OAT = "https://data-api.ecb.europa.eu/service/data/IRS/" +
+  "M.FR.L.L40.CI.0000.EUR.N.Z?format=csvdata&lastNObservations=24";
 
-/* Calibrage documente dans docs/taux.md */
-const DUREE_ANCRE = 23.42;      /* duree initiale moyenne des credits nouveaux */
-const PENTE = 0.024;            /* point de taux par annee de duree */
-const ECART_15 = -0.15;         /* 20 ans -> 15 ans */
-const ECART_25 = 0.12;          /* 20 ans -> 25 ans */
+/* Au-dela de cette derive du taux Banque de France depuis la derniere decision
+   humaine, la grille du site merite un reexamen. */
+const SEUIL_DERIVE = 0.15;
 
-/* Garde-fous */
-const ANCRE_MIN = 0.5, ANCRE_MAX = 8;
-const VARIATION_MAX = 0.5;
-
-const MOIS_FR = ["janvier", "février", "mars", "avril", "mai", "juin",
-  "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
-const MOIS_SANS_ACCENT = ["janvier", "fevrier", "mars", "avril", "mai", "juin",
-  "juillet", "aout", "septembre", "octobre", "novembre", "decembre"];
+/* Garde-fous d'une grille appliquee a la main. */
+const TAUX_MIN = 0.5, TAUX_MAX = 8;
+const ECART_MAX_GRILLE = 1.5;
 
 const sec = process.argv.includes("--dry-run");
 
-/* On leve au lieu d'appeler process.exit : sortir pendant qu'une socket HTTP
-   est encore ouverte fait avorter Node, avec un code de sortie trompeur. */
 class Echec extends Error {}
 function erreur(message) {
   throw new Echec(message);
 }
 
-/* ---------- Recuperation de la serie ---------- */
-async function recupererSerie() {
-  /* Permet de verifier toute la chaine d'ecriture sans reseau :
-     WEBSTAT_FIXTURE="2026-08=3.38" node scripts/maj-taux.mjs --dry-run */
+function argument(nom) {
+  const i = process.argv.indexOf(nom);
+  return i > -1 ? process.argv[i + 1] : null;
+}
+
+/* ---------- Sources ---------- */
+async function serie(url, sep, colPeriode, colValeur) {
+  const reponse = await fetch(url, { headers: { Accept: "*/*" } });
+  if (!reponse.ok) {
+    erreur(`${url}\n  a repondu HTTP ${reponse.status} : ${(await reponse.text()).slice(0, 200)}`);
+  }
+  const lignes = (await reponse.text()).replace(/^﻿/, "").trim().split(/\r?\n/);
+  if (lignes.length < 2) erreur(`${url}\n  n'a rendu aucune ligne de donnees.`);
+  const entetes = lignes[0].split(sep);
+  const ip = entetes.indexOf(colPeriode), iv = entetes.indexOf(colValeur);
+  if (ip < 0 || iv < 0) {
+    erreur(`colonnes ${colPeriode} / ${colValeur} absentes de ${url}\n  entetes recus : ` +
+      entetes.slice(0, 12).join(", "));
+  }
+  const points = new Map();
+  for (const ligne of lignes.slice(1)) {
+    const champs = ligne.split(sep);
+    const periode = (champs[ip] || "").trim();
+    const valeur = Number((champs[iv] || "").trim().replace(",", "."));
+    if (/^\d{4}-\d{2}$/.test(periode) && Number.isFinite(valeur)) points.set(periode, valeur);
+  }
+  if (!points.size) erreur(`aucune observation exploitable dans ${url}`);
+  return points;
+}
+
+async function sources() {
   if (process.env.WEBSTAT_FIXTURE) {
+    /* WEBSTAT_FIXTURE="2026-08=3.38" pour eprouver la chaine sans reseau. */
     const [periode, valeur] = process.env.WEBSTAT_FIXTURE.split("=");
-    console.log(`Observation simulee : ${periode} = ${valeur}`);
-    return [{ periode, valeur: Number(valeur) }];
+    console.log(`Source simulee : ${periode} = ${valeur}`);
+    return { bdf: new Map([[periode, Number(valeur)]]), oat: new Map() };
   }
-
-  const essais = [];
-
-  const csv = await telecharger(EXPORT_CSV);
-  if (csv.ok) {
-    const obs = lireCsv(csv.corps);
-    if (obs.length) {
-      console.log(`Export CSV public : ${obs.length} observations lues.`);
-      return obs;
-    }
-    essais.push(`export CSV -> HTTP 200 mais aucune observation : ${csv.corps.slice(0, 200)}`);
-  } else {
-    essais.push(`export CSV -> HTTP ${csv.statut} ${csv.corps.slice(0, 200)}`);
-  }
-
-  const cle = process.env.WEBSTAT_APIKEY;
-  if (cle) {
-    const json = await telecharger(API_JSON, { Authorization: "Apikey " + cle });
-    if (json.ok) {
-      try {
-        const obs = extraireObservations(JSON.parse(json.corps));
-        if (obs.length) {
-          console.log(`API JSON avec cle : ${obs.length} observations lues.`);
-          return obs;
-        }
-        essais.push(`API JSON -> HTTP 200 mais aucune observation : ${json.corps.slice(0, 200)}`);
-      } catch {
-        essais.push(`API JSON -> reponse non JSON : ${json.corps.slice(0, 200)}`);
-      }
-    } else {
-      /* Le guide precise qu'une cle inconnue ne donne pas un 401 mais ce
-         message, qui feint l'absence du jeu de donnees. */
-      const refusee = /NotFoundResource|does not exist/i.test(json.corps);
-      essais.push(`API JSON -> HTTP ${json.statut}` +
-        (refusee ? " (cle refusee : elle doit venir de l'onglet « Cles d'API » du " +
-          "portail webstat.banque-france.fr, pas de developer.webstat.banque-france.fr)" : "") +
-        ` ${json.corps.slice(0, 160)}`);
-    }
-  }
-
-  erreur(`la serie ${SERIE} n'a pu etre recuperee.\n    ` + essais.join("\n    ") +
-    (cle ? "" : "\n  Aucune cle n'etait fournie, ce qui est normal : l'export CSV est " +
-      "public.\n  Si le portail l'a retire, creer une cle dans l'onglet « Cles d'API » de " +
-      "\n  https://webstat.banque-france.fr/ et la placer dans le secret WEBSTAT_APIKEY."));
-}
-
-async function telecharger(url, entetes = {}) {
-  try {
-    const reponse = await fetch(url, { headers: Object.assign({ Accept: "*/*" }, entetes) });
-    return { statut: reponse.status, ok: reponse.ok, corps: await reponse.text() };
-  } catch (e) {
-    return { statut: 0, ok: false, corps: e.message };
-  }
-}
-
-/* CSV a separateur point-virgule, virgule decimale, precede d'un BOM. On lit
-   par nom de colonne : l'ordre des attributs varie d'un jeu a l'autre. */
-function lireCsv(texte) {
-  const lignes = texte.replace(/^﻿/, "").trim().split(/\r?\n/);
-  if (lignes.length < 2) return [];
-  const entetes = lignes[0].split(";");
-  const iPeriode = entetes.indexOf("time_period");
-  const iValeur = entetes.indexOf("obs_value");
-  if (iPeriode < 0 || iValeur < 0) return [];
-  return lignes.slice(1)
-    .map((ligne) => {
-      const champs = ligne.split(";");
-      return {
-        periode: (champs[iPeriode] || "").trim(),
-        valeur: Number((champs[iValeur] || "").trim().replace(",", "."))
-      };
+  const [bdf, oat] = await Promise.all([
+    serie(URL_BDF, ";", "time_period", "obs_value"),
+    serie(URL_OAT, ",", "TIME_PERIOD", "OBS_VALUE").catch((e) => {
+      console.log("OAT indisponible, on continue sans : " + e.message);
+      return new Map();
     })
-    .filter((o) => /^\d{4}-\d{2}$/.test(o.periode) && Number.isFinite(o.valeur));
+  ]);
+  return { bdf, oat };
 }
 
-/* Secours pour l'API JSON : on cherche des couples periode / valeur. */
-function extraireObservations(racine) {
-  const trouvees = [];
-  const vus = new Set();
-  (function parcourir(noeud) {
-    if (!noeud || typeof noeud !== "object" || vus.has(noeud)) return;
-    vus.add(noeud);
-    if (Array.isArray(noeud)) { noeud.forEach(parcourir); return; }
-    const cles = Object.keys(noeud);
-    const clePeriode = cles.find((c) => /^(time_?period|period|periode)$/i.test(c));
-    const cleValeur = cles.find((c) => /^(obs_?value|value|valeur)$/i.test(c));
-    if (clePeriode && cleValeur) {
-      const valeur = Number(String(noeud[cleValeur]).replace(",", "."));
-      const periode = String(noeud[clePeriode]);
-      if (Number.isFinite(valeur) && /^\d{4}-\d{2}/.test(periode)) {
-        trouvees.push({ periode: periode.slice(0, 7), valeur });
-      }
-    }
-    cles.forEach((c) => parcourir(noeud[c]));
-  })(racine);
-  return trouvees;
+function dernier(points) {
+  const cles = [...points.keys()].sort();
+  const cle = cles[cles.length - 1];
+  return cle ? { periode: cle, valeur: points.get(cle) } : null;
 }
 
-/* ---------- Derivation des trois taux ---------- */
-function calculerTaux(ancre) {
-  const decalage = (DUREE_ANCRE - 20) * PENTE;
-  const t20 = arrondir(ancre - decalage);
-  return { 15: arrondir(t20 + ECART_15), 20: t20, 25: arrondir(t20 + ECART_25) };
-}
-
-function arrondir(n) {
-  return Math.round(n * 100) / 100;
-}
-
-/* ---------- Lecture de l'etat actuel du fichier ---------- */
+/* ---------- Etat du site ---------- */
 function lireEtat(source) {
   const ligneTaux = source.match(/var RATES = \{([^}]*)\};\s*\/\* AUTO:RATES \*\//);
   const ligneMois = source.match(/var RATES_MOIS = "([^"]*)";\s*\/\* AUTO:MOIS \*\//);
@@ -191,24 +126,37 @@ function lireEtat(source) {
   return { taux, mois: ligneMois[1] };
 }
 
-function moisEnFrancais(periode) {
-  const m = periode.match(/^(\d{4})-(\d{2})$/);
-  if (!m) erreur("periode illisible : " + periode);
-  const index = Number(m[2]) - 1;
-  if (index < 0 || index > 11) erreur("mois hors bornes : " + periode);
-  return { texte: `${MOIS_FR[index]} ${m[1]}`, cle: `${m[1]}-${m[2]}` };
+async function lireReference() {
+  try {
+    return JSON.parse(await readFile(FICHIER_REF, "utf8"));
+  } catch {
+    return null;
+  }
 }
 
-function cleDepuisTexte(texte) {
-  const parties = texte.trim().split(/\s+/);
-  if (parties.length < 2) return "";
-  const nom = parties[0].toLowerCase();
-  const mois = MOIS_FR.indexOf(nom) > -1 ? MOIS_FR.indexOf(nom) : MOIS_SANS_ACCENT.indexOf(nom);
-  if (mois < 0) return "";
-  return `${parties[1]}-${String(mois + 1).padStart(2, "0")}`;
+/* ---------- Application d'une grille decidee ---------- */
+function analyserGrille(brut) {
+  const parts = String(brut).split("/").map((x) => Number(x.trim().replace(",", ".")));
+  if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) {
+    erreur(`grille illisible : « ${brut} ». Format attendu : --fixer 3.33/3.47/3.56`);
+  }
+  const [t15, t20, t25] = parts;
+  for (const [nom, v] of [["15 ans", t15], ["20 ans", t20], ["25 ans", t25]]) {
+    if (v < TAUX_MIN || v > TAUX_MAX) {
+      erreur(`taux ${nom} hors bornes plausibles : ${v} % (attendu entre ${TAUX_MIN} et ${TAUX_MAX}).`);
+    }
+  }
+  if (!(t15 <= t20 && t20 <= t25)) {
+    erreur(`grille non croissante : ${t15} / ${t20} / ${t25}. ` +
+      `Le taux augmente normalement avec la duree.`);
+  }
+  if (t25 - t15 > ECART_MAX_GRILLE) {
+    erreur(`ecart de ${(t25 - t15).toFixed(2)} point entre 15 et 25 ans, au-dela de ` +
+      `${ECART_MAX_GRILLE} : verifier la saisie.`);
+  }
+  return { 15: t15, 20: t20, 25: t25 };
 }
 
-/* ---------- Ecriture ---------- */
 async function majVersionAssets(version) {
   const fichiers = (await readdir(RACINE)).filter((f) => f.endsWith(".html"));
   const touches = [];
@@ -227,69 +175,109 @@ async function majVersionAssets(version) {
   return touches;
 }
 
-/* ---------- Programme ---------- */
-async function principal() {
-  const observations = await recupererSerie();
-  observations.sort((a, b) => a.periode.localeCompare(b.periode));
-  const derniere = observations[observations.length - 1];
-  console.log(`Derniere observation : ${derniere.periode} = ${derniere.valeur} %`);
+async function fixer(grilleBrute, moisTexte, etat, source, bdf, oat) {
+  const grille = analyserGrille(grilleBrute);
+  if (!moisTexte) erreur("--fixer exige --mois, par exemple --mois \"octobre 2026\".");
 
-  if (!(derniere.valeur >= ANCRE_MIN && derniere.valeur <= ANCRE_MAX)) {
-    erreur(`taux ancre hors bornes plausibles : ${derniere.valeur} % ` +
-      `(attendu entre ${ANCRE_MIN} et ${ANCRE_MAX}).`);
+  const nouveau = source
+    .replace(/var RATES = \{[^}]*\};(\s*)\/\* AUTO:RATES \*\//,
+      `var RATES = { 15: ${grille[15]}, 20: ${grille[20]}, 25: ${grille[25]} };$1/* AUTO:RATES */`)
+    .replace(/var RATES_MOIS = "[^"]*";(\s*)\/\* AUTO:MOIS \*\//,
+      `var RATES_MOIS = "${moisTexte}";$1/* AUTO:MOIS */`);
+  /* Les marqueurs ont deja ete valides par lireEtat : si rien ne change, c'est
+     que la grille demandee est celle en place. Cas normal quand on ne veut
+     qu'enregistrer la reference de surveillance. */
+  const identique = nouveau === source;
+  if (identique) console.log("Grille demandee identique a celle en place, seule la reference change.");
+
+  const version = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  if (!sec && !identique) await writeFile(FICHIER_JS, nouveau);
+  const pages = identique ? [] : await majVersionAssets(version);
+
+  const reference = {
+    commentaire: "Etat au moment de la derniere decision humaine sur la grille. " +
+      "Lu par scripts/maj-taux.mjs pour mesurer la derive. Ne pas editer a la main.",
+    mois: moisTexte,
+    grille,
+    ancreBdf: bdf ? { periode: bdf.periode, valeur: bdf.valeur } : null,
+    oat: oat ? { periode: oat.periode, valeur: oat.valeur } : null,
+    decideLe: new Date().toISOString().slice(0, 10)
+  };
+  if (!sec) await writeFile(FICHIER_REF, JSON.stringify(reference, null, 2) + "\n");
+
+  console.log("");
+  console.log(`Grille appliquee pour ${moisTexte} :`);
+  console.log(`  15 ans : ${etat.taux[15]} % -> ${grille[15]} %`);
+  console.log(`  20 ans : ${etat.taux[20]} % -> ${grille[20]} %`);
+  console.log(`  25 ans : ${etat.taux[25]} % -> ${grille[25]} %`);
+  console.log(`  version des assets : ?v=${version} (${pages.length} pages)`);
+  console.log(`  reference enregistree : ${bdf ? bdf.periode + " = " + bdf.valeur + " %" : "aucune"}`);
+  if (sec) console.log("\n(--dry-run : aucun fichier ecrit)");
+}
+
+/* ---------- Surveillance ---------- */
+async function surveiller(etat, bdf, oat, reference) {
+  console.log(`Grille en ligne : ${etat.taux[15]} / ${etat.taux[20]} / ${etat.taux[25]} %` +
+    ` pour ${etat.mois}`);
+  if (bdf) console.log(`Banque de France : ${bdf.valeur} % (${bdf.periode})`);
+  if (oat) console.log(`OAT 10 ans       : ${oat.valeur} % (${oat.periode})`);
+
+  if (!reference || !reference.ancreBdf) {
+    console.log("");
+    console.log("Aucune reference enregistree : impossible de mesurer une derive.");
+    console.log("Elle sera creee a la prochaine execution avec --fixer.");
+    return { alerte: false };
   }
 
+  const derive = bdf ? bdf.valeur - reference.ancreBdf.valeur : 0;
+  console.log("");
+  console.log(`Reference posee le ${reference.decideLe} : ` +
+    `${reference.ancreBdf.periode} = ${reference.ancreBdf.valeur} %`);
+  console.log(`Derive depuis : ${derive >= 0 ? "+" : ""}${derive.toFixed(2)} point ` +
+    `(seuil d'alerte ${SEUIL_DERIVE})`);
+
+  if (Math.abs(derive) < SEUIL_DERIVE) {
+    console.log("Sous le seuil : rien a signaler.");
+    return { alerte: false, derive };
+  }
+
+  console.log("");
+  console.log("AU-DELA DU SEUIL : la grille du site merite un reexamen.");
+  console.log("Attention, ne pas recopier le chiffre Banque de France : il decrit un mois");
+  console.log("deja ancien et une moyenne realisee, plus basse que les baremes du moment.");
+  console.log("Comparer aux baremes publies du mois en cours avant de decider.");
+  return { alerte: true, derive };
+}
+
+/* ---------- Programme ---------- */
+async function principal() {
+  const { bdf: pointsBdf, oat: pointsOat } = await sources();
+  const bdf = dernier(pointsBdf);
+  const oat = dernier(pointsOat);
   const source = await readFile(FICHIER_JS, "utf8");
   const etat = lireEtat(source);
-  const mois = moisEnFrancais(derniere.periode);
-  const cleActuelle = cleDepuisTexte(etat.mois);
+  const reference = await lireReference();
 
-  if (cleActuelle && mois.cle <= cleActuelle) {
-    console.log(`Rien a faire : le fichier porte deja ${etat.mois} (${cleActuelle}), ` +
-      `la source donne ${mois.cle}.`);
+  const grilleBrute = argument("--fixer");
+  if (grilleBrute) {
+    await fixer(grilleBrute, argument("--mois"), etat, source, bdf, oat);
     return;
   }
 
-  const taux = calculerTaux(derniere.valeur);
-  const variation = Math.abs(taux[20] - etat.taux[20]);
-  if (variation > VARIATION_MAX) {
-    erreur(`variation de ${variation.toFixed(2)} point sur le taux 20 ans ` +
-      `(${etat.taux[20]} % -> ${taux[20]} %), au-dela du seuil de ${VARIATION_MAX}. ` +
-      `Verification humaine requise avant publication.`);
-  }
+  const bilan = await surveiller(etat, bdf, oat, reference);
 
-  const version = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  const nouveau = source
-    .replace(/var RATES = \{[^}]*\};(\s*)\/\* AUTO:RATES \*\//,
-      `var RATES = { 15: ${taux[15]}, 20: ${taux[20]}, 25: ${taux[25]} };$1/* AUTO:RATES */`)
-    .replace(/var RATES_MOIS = "[^"]*";(\s*)\/\* AUTO:MOIS \*\//,
-      `var RATES_MOIS = "${mois.texte}";$1/* AUTO:MOIS */`);
-
-  if (nouveau === source) erreur("la reecriture n'a rien change, verifier les marqueurs AUTO.");
-  if (!sec) await writeFile(FICHIER_JS, nouveau);
-
-  const pages = await majVersionAssets(version);
-
-  console.log("");
-  console.log(`Ancre Banque de France : ${derniere.valeur} % (${mois.texte})`);
-  console.log(`Taux 15 ans : ${etat.taux[15]} % -> ${taux[15]} %`);
-  console.log(`Taux 20 ans : ${etat.taux[20]} % -> ${taux[20]} %`);
-  console.log(`Taux 25 ans : ${etat.taux[25]} % -> ${taux[25]} %`);
-  console.log(`Version des assets : ?v=${version} (${pages.length} pages)`);
-  if (sec) console.log("\n(--dry-run : aucun fichier ecrit)");
-
-  /* Sortie exploitable par le workflow pour le titre et le corps de la PR. */
-  if (process.env.GITHUB_OUTPUT && !sec) {
+  if (process.env.GITHUB_OUTPUT) {
     const lignes = [
-      `mois=${mois.texte}`,
-      `ancre=${derniere.valeur}`,
-      `taux15=${taux[15]}`,
-      `taux20=${taux[20]}`,
-      `taux25=${taux[25]}`,
-      `avant15=${etat.taux[15]}`,
-      `avant20=${etat.taux[20]}`,
-      `avant25=${etat.taux[25]}`,
-      `version=${version}`
+      `alerte=${bilan.alerte ? "oui" : "non"}`,
+      `derive=${(bilan.derive ?? 0).toFixed(2)}`,
+      `bdf=${bdf ? bdf.valeur : ""}`,
+      `bdf_mois=${bdf ? bdf.periode : ""}`,
+      `oat=${oat ? oat.valeur : ""}`,
+      `oat_mois=${oat ? oat.periode : ""}`,
+      `grille=${etat.taux[15]} / ${etat.taux[20]} / ${etat.taux[25]}`,
+      `grille_mois=${etat.mois}`,
+      `reference=${reference?.ancreBdf ? reference.ancreBdf.periode + " = " +
+        reference.ancreBdf.valeur + " %" : "aucune"}`
     ];
     await writeFile(process.env.GITHUB_OUTPUT, lignes.join("\n") + "\n", { flag: "a" });
   }

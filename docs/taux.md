@@ -27,11 +27,51 @@ paraît avec cinq semaines de retard : sur un marché qui bouge de 0,1 point par
 mois, elle porte deux mois d'erreur intégrée. **Elle donne la tendance, pas le
 niveau du mois en cours.**
 
-Conséquence pratique : toute pull request de mise à jour automatique doit être
-jugée contre les baromètres publiés du mois en cours, pas acceptée parce qu'elle
-vient d'une source officielle. Le garde-fou de mois y aide déjà — le script ne
-propose rien tant que la source n'annonce pas un mois postérieur à celui inscrit
-dans le fichier.
+Conséquence pratique : **rien n'écrit les taux automatiquement.** Le workflow
+mesure la dérive et ouvre une issue ; le chiffre est décidé par un humain qui
+regarde les barèmes du mois, puis appliqué avec `--fixer`.
+
+## Pourquoi l'OAT 10 ans ne rattrape pas ce retard
+
+L'idée paraît évidente : l'OAT 10 ans est le moteur des taux immobiliers, elle
+est publiée sans retard, donc elle devrait permettre de corriger le décalage.
+**Les données ne le confirment pas.** Régression du taux de crédit sur l'OAT,
+151 mois de janvier 2014 à juillet 2026, en variations, sans constante :
+
+| Horizon | Transmission β | R² |
+|---|---|---|
+| 1 mois | 0,075 | 0,03 |
+| 2 mois | 0,111 | 0,04 |
+| 3 mois | 0,164 | 0,07 |
+| 6 mois | 0,308 | 0,17 |
+| 12 mois | 0,462 | 0,31 |
+
+À un mois, une hausse de 0,15 point de l'OAT ne prédit que 0,011 point de hausse
+du taux de crédit, et n'explique que 3 % de la variance. Il fallait rattraper
+0,20 point : la correction en aurait couvert un vingtième.
+
+La raison se lit dans l'écart entre les deux taux, qui n'est pas une marge
+stable :
+
+| Période | Écart crédit − OAT | Écart-type |
+|---|---|---|
+| 2014-2019 | +1,11 pt | 0,36 |
+| 2020-2021 | +1,23 pt | 0,21 |
+| 2022-2023 | +0,03 pt | 0,56 |
+| 2024-2026 | +0,11 pt | 0,57 |
+
+La marge s'est effondrée de 1,2 point à 0,1 point après 2022, et sa dispersion a
+doublé. Les banques françaises prêtent désormais quasiment au niveau du
+souverain, en arbitrant selon leur collecte de dépôts et leur appétit de parts
+de marché, pas selon un écart mécanique sur l'OAT. Il n'y a donc pas de relation
+exploitable à automatiser.
+
+Le script affiche quand même l'OAT dans son rapport : elle reste un indicateur
+de contexte utile à l'humain qui décide, et la BCE la publie un mois plus tôt que
+la Banque de France ne publie son taux de crédit.
+
+Le calibrage est reproductible : les deux séries sont publiques et sans clé, le
+calcul tient en une trentaine de lignes.
 
 ## Ce que la Banque de France mesure
 
@@ -117,49 +157,61 @@ Il existe deux API Webstat, et elles n'acceptent pas les mêmes clés :
 
 Une clé du nouveau portail présentée à l'ancienne passerelle donne toujours
 `401 Invalid client id or secret`, quoi qu'on fasse : c'est le piège dans lequel
-ce script est tombé avant de passer à l'export CSV. Si le CSV public disparaît
-un jour, la solution est une clé du **nouveau** portail placée dans un secret
-GitHub nommé `WEBSTAT_APIKEY` : le script l'utilisera alors en secours, sur
-l'API JSON.
+ce script est tombé avant de passer à l'export CSV. Si le CSV public disparaissait
+un jour, il faudrait une clé du **nouveau** portail et un appel à l'API JSON — le
+script ne le fait plus, il n'a plus besoin d'aucune clé.
 
-## Mise en service (un seul réglage)
+## Mise en service
 
-Dans *Settings → Actions → General → Workflow permissions*, cocher « Allow
-GitHub Actions to create and approve pull requests ». Sans cela le script
-s'exécute mais ne peut rien proposer.
+Rien à configurer : les deux sources sont publiques, et le workflow n'a besoin
+que du droit d'ouvrir une issue, que le jeton par défaut possède déjà.
 
-Ensuite, lancer une fois le workflow à la main (*Actions → Mise a jour des taux
-indicatifs → Run workflow*) en cochant l'essai à blanc : il affichera la valeur
-lue sans rien modifier.
-
-Le script tourne aussi en local, sans rien configurer :
-
-```
-node scripts/maj-taux.mjs --dry-run
-```
-
-Et pour éprouver la chaîne d'écriture sans réseau, avec une valeur choisie :
-
-```
-WEBSTAT_FIXTURE="2026-08=3.38" node scripts/maj-taux.mjs --dry-run
-```
-
-## Mise à jour
+## Le cycle mensuel
 
 `.github/workflows/taux.yml` exécute `scripts/maj-taux.mjs` le 12 de chaque
-mois, après la publication Banque de France. Le script réécrit les deux lignes
-marquées `AUTO:` dans `assets/js/simulateur.js`, remonte le paramètre `?v=` des
-pages HTML, puis **ouvre une pull request** : la publication reste une décision
-humaine.
+mois, après la publication Banque de France. Le script **ne modifie jamais les
+taux**. Il compare la statistique du moment à la référence enregistrée dans
+`scripts/taux-reference.json` lors de la dernière décision humaine, et ouvre une
+issue si la dérive dépasse 0,15 point. Si une issue est déjà ouverte, il la
+commente plutôt que d'en empiler une autre.
 
-Garde-fous du script, qui échoue plutôt que de publier :
+Pour décider, relever les barèmes publiés du mois en cours sur 15, 20 et 25 ans,
+prendre le milieu des fourchettes, puis appliquer :
 
-- taux ancre hors de l'intervalle 0,5 % – 8 % ;
-- variation du taux 20 ans supérieure à 0,5 point d'un mois sur l'autre ;
-- mois publié identique ou antérieur à celui déjà inscrit dans le fichier.
+```
+node scripts/maj-taux.mjs --fixer 3.33/3.47/3.56 --mois "septembre 2026"
+```
+
+Le script réécrit les deux lignes marquées `AUTO:` dans `simulateur.js`, remonte
+le paramètre `?v=` des pages et enregistre la nouvelle référence.
+
+Garde-fous de la saisie, qui échouent plutôt que d'écrire :
+
+- un taux hors de l'intervalle 0,5 % – 8 % ;
+- une grille non croissante avec la durée ;
+- un écart supérieur à 1,5 point entre 15 et 25 ans ;
+- `--fixer` sans `--mois`, ou une grille illisible.
+
+Le rapport de surveillance tourne aussi en local, sans rien configurer :
+
+```
+node scripts/maj-taux.mjs
+```
+
+Et pour éprouver l'alerte sans attendre un vrai mouvement de marché :
+
+```
+WEBSTAT_FIXTURE="2026-08=3.50" node scripts/maj-taux.mjs
+```
 
 ## À revoir
 
 Le calibrage de l'écart par durée devrait être revérifié une ou deux fois par an
 contre les baromètres publiés : la pente s'aplatit quand les taux baissent et se
-redresse quand ils montent. Le niveau, lui, se met à jour tout seul.
+redresse quand ils montent.
+
+Si la marge sur l'OAT redevenait stable — elle l'était avant 2022 — la
+correction automatique du retard redeviendrait envisageable. Le calibrage à
+refaire est celui décrit plus haut : une régression en variations sur les deux
+séries publiques. Tant que le R² à un mois reste sous 0,3, ça ne vaut pas la
+peine.
