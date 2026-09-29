@@ -119,8 +119,21 @@
       personnes: 1,
       zone: "A",
       rfr: null,
-      prixCible: null
+      prixCible: null,
+      taux: null
     };
+
+    /* Taux saisi par le visiteur, sinon le taux indicatif du site pour la duree. */
+    var TAUX_MIN = 0.1, TAUX_MAX = 10;
+    function tauxRetenu(duree) {
+      return tauxSaisi() ? state.taux : (RATES[duree] || 3.5);
+    }
+    function tauxSaisi() {
+      return state.taux >= TAUX_MIN && state.taux <= TAUX_MAX;
+    }
+    function pourcent(n) {
+      return n.toFixed(2).replace(".", ",").replace(/,00$/, "") + " %";
+    }
 
     /* Le PTZ retient le revenu fiscal de référence de l'année N-2, qui figure
        sur l'avis d'imposition de l'année suivante. */
@@ -156,6 +169,15 @@
       }
     }
 
+    /* Le champ taux est facultatif : on affiche le taux du site qui s'appliquera
+       a defaut, et il suit la duree que le visiteur selectionne. */
+    function syncTauxDefaut() {
+      var duree = parseInt(state.duree, 10) || 20;
+      form.querySelectorAll("[data-taux-defaut]").forEach(function (el) {
+        el.textContent = pourcent(RATES[duree] || 3.5);
+      });
+    }
+
     function validatePanel(index) {
       var panel = panels[index];
       var ok = true;
@@ -165,6 +187,17 @@
         if (field) field.classList.toggle("has-error", empty);
         if (empty) ok = false;
       });
+      /* Un taux saisi hors bornes plausibles bloque : mieux vaut le corriger
+         qu'afficher une mensualite fantaisiste. */
+      var champTaux = panel.querySelector("#taux");
+      if (champTaux) {
+        var brut = champTaux.value.trim();
+        var valeur = parseFloat(brut);
+        var invalide = brut !== "" && (isNaN(valeur) || valeur < TAUX_MIN || valeur > TAUX_MAX);
+        var field = champTaux.closest(".field");
+        if (field) field.classList.toggle("has-error", invalide);
+        if (invalide) ok = false;
+      }
       return ok;
     }
 
@@ -196,10 +229,12 @@
         });
         state[input.name] = input.value;
         syncPtzFields();
+        syncTauxDefaut();
       });
     });
 
     syncPtzFields();
+    syncTauxDefaut();
     show(0);
 
     form.querySelectorAll("input[type='number']").forEach(function (input) {
@@ -340,7 +375,8 @@
       var charges = state.charges || 0;
       var apport = state.apport || 0;
       var duree = parseInt(state.duree, 10) || 20;
-      var rate = RATES[duree] || 3.5;
+      var rate = tauxRetenu(duree);
+      var rateChoisi = tauxSaisi();
 
       /* Règle HCSF : l'ensemble des charges de crédit reste sous 35 % des revenus. */
       var mensualiteMax = Math.max(revenus * MAX_DEBT_RATIO - charges, 0);
@@ -382,8 +418,15 @@
       set("apport-recap", euros(apport));
       set("notaire", euros(fraisNotaire));
       set("interets", euros(coutInterets));
-      set("taux", rate.toFixed(2).replace(".", ",") + " %");
+      set("taux", pourcent(rate));
       set("duree-recap", duree + " ans");
+
+      form.querySelectorAll("[data-taux-label]").forEach(function (el) {
+        el.textContent = rateChoisi ? "Taux que vous avez indiqué" : "Taux indicatif retenu";
+      });
+      form.querySelectorAll("[data-taux-mention]").forEach(function (el) {
+        el.textContent = rateChoisi ? "le taux que vous avez indiqué" : "un taux de marché estimé";
+      });
       set("endettement", endettement.toFixed(1).replace(".", ",") + " %");
 
       var ptzBlock = form.querySelector("[data-ptz-block]");

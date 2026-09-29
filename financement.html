@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
-<link rel="stylesheet" href="assets/css/style.css?v=20260928b">
+<link rel="stylesheet" href="assets/css/style.css?v=20260929">
 </head>
 <body>
 <a class="skip-link" href="#main">Aller au contenu</a>
@@ -285,6 +285,13 @@
             </label>
           </div>
 
+          <div class="field" style="margin-top:30px;">
+            <label for="taux">Taux d'intérêt annuel (%)</label>
+            <input class="input" type="number" id="taux" name="taux" min="0.1" max="10" step="0.01" inputmode="decimal" placeholder="Facultatif">
+            <span class="hint">Si une banque vous a déjà proposé un taux, indiquez-le. Sans réponse, nous appliquons notre taux indicatif pour cette durée, soit <span data-taux-defaut>3,45&nbsp;%</span>.</span>
+            <span class="error-msg"><i class="ph ph-warning-circle" aria-hidden="true"></i>Indiquez un taux entre 0,1&nbsp;% et 10&nbsp;%, ou laissez le champ vide.</span>
+          </div>
+
           <div class="sim-nav">
             <button type="button" class="btn btn-outline" data-sim-prev>Retour</button>
             <button type="button" class="btn btn-primary" data-sim-next>Voir mon budget</button>
@@ -343,7 +350,7 @@
               <p class="d">Sur toute la durée du prêt.</p>
             </div>
             <div class="result-card">
-              <div class="k">Taux indicatif retenu</div>
+              <div class="k" data-taux-label>Taux indicatif retenu</div>
               <div class="v" data-result="taux">0 %</div>
               <p class="d">Sur <span data-result="duree-recap">20 ans</span>.</p>
             </div>
@@ -372,7 +379,7 @@
 
           <div class="result-note">
             <i class="ph ph-info" aria-hidden="true"></i>
-            <span>Simulation indicative calculée avec un taux d'endettement de <span data-result="endettement">35 %</span> et un taux de marché estimé. Le prêt à taux zéro applique le barème officiel en vigueur. Cette simulation ne constitue ni une offre de prêt, ni un conseil en investissement. Seule une banque peut valider votre financement.</span>
+            <span>Simulation indicative calculée avec un taux d'endettement de <span data-result="endettement">35 %</span> et <span data-taux-mention>un taux de marché estimé</span>. Le prêt à taux zéro applique le barème officiel en vigueur. Cette simulation ne constitue ni une offre de prêt, ni un conseil en investissement. Seule une banque peut valider votre financement.</span>
           </div>
 
           <div class="sim-nav">
@@ -475,8 +482,8 @@
   </div>
 </footer>
 
-<script src="assets/js/main.js?v=20260928b"></script>
-<script src="assets/js/zonage-abc.js?v=20260928b"></script>
-<script src="assets/js/simulateur.js?v=20260928b"></script>
+<script src="assets/js/main.js?v=20260929"></script>
+<script src="assets/js/zonage-abc.js?v=20260929"></script>
+<script src="assets/js/simulateur.js?v=20260929"></script>
 </body>
 </html>
