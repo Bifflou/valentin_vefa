@@ -4,7 +4,36 @@ Le simulateur a besoin d'un taux pour trois durées : 15, 20 et 25 ans. Aucune
 source publique ne publie cette grille. Ce document dit d'où viennent les trois
 chiffres, ce qui est mesuré et ce qui est modélisé.
 
-## Ce qui est mesuré
+## Avertissement : le décalage de publication
+
+**La grille en ligne n'est pas ancrée sur la statistique Banque de France.**
+Elle prend le milieu des fourchettes de marché observées pour le mois indiqué
+par `RATES_MOIS`.
+
+La raison est une erreur commise le 29 septembre 2026 et corrigée le même jour.
+Les taux avaient été ancrés sur la moyenne Banque de France de juillet 2026
+(3,30 %), publiée le 7 septembre. Le marché avait entre-temps nettement monté,
+l'OAT 10 ans franchissant durablement 4 %, au plus haut depuis 2009. Résultat :
+
+| Durée | Grille ancrée sur juillet | Fourchette observée en septembre |
+|---|---|---|
+| 15 ans | 3,07 % | 3,23 % à 3,43 % |
+| 20 ans | 3,22 % | 3,40 % à 3,54 % |
+| 25 ans | 3,34 % | 3,50 % à 3,61 % |
+
+La grille se retrouvait sous le **bas** de la fourchette sur les trois durées, ce
+qui surestimait les budgets d'environ 3 %. La statistique Banque de France
+paraît avec cinq semaines de retard : sur un marché qui bouge de 0,1 point par
+mois, elle porte deux mois d'erreur intégrée. **Elle donne la tendance, pas le
+niveau du mois en cours.**
+
+Conséquence pratique : toute pull request de mise à jour automatique doit être
+jugée contre les baromètres publiés du mois en cours, pas acceptée parce qu'elle
+vient d'une source officielle. Le garde-fou de mois y aide déjà — le script ne
+propose rien tant que la source n'annonce pas un mois postérieur à celui inscrit
+dans le fichier.
+
+## Ce que la Banque de France mesure
 
 Le **niveau** vient de la Banque de France, série
 `MIR1.M.FR.B.A22HR.A.R.A.2254U6.EUR.N`, intitulée exactement « Taux des crédits
@@ -49,24 +78,17 @@ taux15   = taux20 - 0,15
 taux25   = taux20 + 0,12
 ```
 
-Application à juillet 2026, `A = 3,30 %` :
-
-| Durée | Taux |
-|---|---|
-| 15 ans | 3,07 % |
-| 20 ans | 3,22 % |
-| 25 ans | 3,34 % |
-
-Pour mémoire, la grille précédente du site était 3,25 / 3,45 / 3,62 %, soit
-environ 0,20 point au-dessus du marché, ce qui sous-estimait les budgets
-affichés d'environ 2 à 3 %.
+Ce calcul donne la **forme** de la courbe et la tendance du niveau. Il n'est pas
+utilisé seul pour fixer la grille en ligne : voir l'avertissement en tête de ce
+document. Appliqué à juillet 2026 (`A = 3,30 %`) il donnait 3,07 / 3,22 / 3,34,
+soit deux mois de retard sur le marché de septembre.
 
 ## Ce que le visiteur voit
 
-Le simulateur annonce « un taux estimé d'après la Banque de France (données de
-*mois*) » dans l'avertissement des résultats, et l'aide du champ de taux affiche
-la valeur retenue pour la durée choisie. Un visiteur qui détient une proposition
-bancaire saisit son propre taux, et l'avertissement le dit alors explicitement.
+Le simulateur annonce « un taux de marché estimé pour *mois* » dans
+l'avertissement des résultats, et l'aide du champ de taux affiche la valeur
+retenue pour la durée choisie. Un visiteur qui détient une proposition bancaire
+saisit son propre taux, et l'avertissement le dit alors explicitement.
 
 ## Comment la donnée est récupérée
 

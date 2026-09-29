@@ -3,13 +3,13 @@
   "use strict";
 
   /* ---------- Taux indicatifs (hors assurance et hors frais) ----------
-     Niveau ancré sur la série Banque de France MIR1.M.FR.B.A22HR.A.R.A.2254U6.EUR.N,
-     « taux des crédits nouveaux à l'habitat (hors renégociations) aux particuliers ».
-     Écart par durée documenté dans docs/taux.md.
+     Milieu des fourchettes de marché observées pour le mois indiqué.
+     La statistique Banque de France paraît avec cinq semaines de retard : elle
+     donne la tendance, pas le niveau du mois en cours. Voir docs/taux.md.
      Les deux lignes marquées AUTO sont réécrites par .github/workflows/taux.yml :
      ne pas en changer la forme sans adapter scripts/maj-taux.mjs. */
-  var RATES = { 15: 3.07, 20: 3.22, 25: 3.34 };     /* AUTO:RATES */
-  var RATES_MOIS = "juillet 2026";                   /* AUTO:MOIS */
+  var RATES = { 15: 3.33, 20: 3.47, 25: 3.56 };     /* AUTO:RATES */
+  var RATES_MOIS = "septembre 2026";                 /* AUTO:MOIS */
   var NOTARY = { neuf: 0.025, ancien: 0.075 };
   var MAX_DEBT_RATIO = 0.35;
 
@@ -433,7 +433,7 @@
       form.querySelectorAll("[data-taux-mention]").forEach(function (el) {
         el.textContent = rateChoisi
           ? "le taux que vous avez indiqué"
-          : "un taux estimé d'après la Banque de France (données de " + RATES_MOIS + ")";
+          : "un taux de marché estimé pour " + RATES_MOIS;
       });
       set("endettement", endettement.toFixed(1).replace(".", ",") + " %");
 
