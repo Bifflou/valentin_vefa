@@ -194,6 +194,30 @@
         if (field) field.classList.toggle("has-error", empty);
         if (empty) ok = false;
       });
+      /* Bornes de vraisemblance. Sans elles, une faute de frappe sur les revenus
+         produit un budget a sept chiffres, presente avec le meme aplomb qu'un
+         resultat credible. */
+      panel.querySelectorAll("input[data-max]").forEach(function (input) {
+        var field = input.closest(".field");
+        var msg = field && field.querySelector(".error-msg");
+        if (!msg) return;
+        /* Le message d'origine est memorise une fois : il doit revenir quand la
+           valeur redevient plausible, sans quoi un champ vide afficherait
+           « montant trop eleve ». */
+        if (!msg.dataset.messageOrigine) msg.dataset.messageOrigine = msg.innerHTML;
+
+        var valeur = parseFloat(input.value);
+        var trop = !isNaN(valeur) && valeur > parseFloat(input.getAttribute("data-max"));
+        if (trop) {
+          msg.innerHTML = '<i class="ph ph-warning-circle" aria-hidden="true"></i>' +
+            (input.getAttribute("data-max-message") || "Ce montant dépasse ce que le simulateur sait traiter.");
+          field.classList.add("has-error");
+          ok = false;
+        } else {
+          msg.innerHTML = msg.dataset.messageOrigine;
+        }
+      });
+
       /* Un taux saisi hors bornes plausibles bloque : mieux vaut le corriger
          qu'afficher une mensualite fantaisiste. */
       var champTaux = panel.querySelector("#taux");
@@ -223,6 +247,12 @@
     });
     form.querySelectorAll("[data-sim-prev]").forEach(function (btn) {
       btn.addEventListener("click", function () { show(current - 1); });
+    });
+
+    /* « Refaire la simulation » etait cable a la fin de compute(), donc inactif
+       tant qu'aucun calcul n'avait eu lieu et reassigne a chaque recalcul. */
+    form.querySelectorAll("[data-sim-restart]").forEach(function (btn) {
+      btn.addEventListener("click", function () { show(0); });
     });
 
     /* ---------- Tiles (radio) ---------- */
@@ -545,10 +575,6 @@
         }
       }
 
-      var restart = form.querySelector("[data-sim-restart]");
-      if (restart) {
-        restart.onclick = function () { show(0); };
-      }
     }
   }
 

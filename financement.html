@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
-<link rel="stylesheet" href="assets/css/style.css?v=20261028e">
+<link rel="stylesheet" href="assets/css/style.css?v=20261028g">
 </head>
 <body>
 <a class="skip-link" href="#main">Aller au contenu</a>
@@ -140,8 +140,9 @@
 
           <div class="field" style="margin-top:30px;">
             <label for="prixCible">Prix du bien que vous avez repéré (€)</label>
-            <input class="input" type="number" id="prixCible" name="prixCible" min="0" step="1000" inputmode="numeric" placeholder="Facultatif">
+            <input class="input" type="number" id="prixCible" name="prixCible" min="0" step="1000" inputmode="numeric" placeholder="Facultatif" data-max="5000000" data-max-message="Au-delà de 5 000 000 €, contactez-nous directement&#8239;: ce simulateur n'est pas calibré pour ces montants.">
             <span class="hint">Si vous avez déjà un bien en vue, indiquez son prix : nous comparerons sa mensualité à votre mensualité maximale.</span>
+            <span class="error-msg"><i class="ph ph-warning-circle" aria-hidden="true"></i>Vérifiez ce montant.</span>
           </div>
 
           <label class="check" style="margin-top:22px;">
@@ -234,23 +235,25 @@
 
           <div class="field">
             <label for="revenus">Revenus nets mensuels du foyer (€)</label>
-            <input class="input" type="number" id="revenus" name="revenus" min="0" step="50" placeholder="4200" inputmode="numeric" required>
+            <input class="input" type="number" id="revenus" name="revenus" min="0" step="50" placeholder="4200" inputmode="numeric" required data-max="20000" data-max-message="Revenus mensuels du foyer, pas annuels&#8239;: au-delà de 20 000 € par mois, vérifiez votre saisie.">
             <span class="hint">Salaires nets avant impôt. Ajoutez 70 % des loyers déjà perçus si vous êtes bailleur.</span>
             <span class="error-msg"><i class="ph ph-warning-circle" aria-hidden="true"></i>Indiquez un montant de revenus pour continuer.</span>
           </div>
 
           <div class="field">
             <label for="charges">Mensualités de crédits en cours (€)</label>
-            <input class="input" type="number" id="charges" name="charges" min="0" step="10" placeholder="0" inputmode="numeric">
+            <input class="input" type="number" id="charges" name="charges" min="0" step="10" placeholder="0" inputmode="numeric" data-max="20000" data-max-message="Ce montant de charges dépasse ce que le simulateur sait traiter.">
             <span class="hint">Crédit auto, prêt personnel, autre crédit immobilier. Laissez à zéro si vous n'en avez aucun.</span>
+            <span class="error-msg"><i class="ph ph-warning-circle" aria-hidden="true"></i>Vérifiez ce montant.</span>
           </div>
 
           <div class="field" data-ptz-fields>
             <label for="rfr">Revenu fiscal de référence <span data-annee-rfr>N-2</span> (€)</label>
-            <input class="input" type="number" id="rfr" name="rfr" min="0" step="500" inputmode="numeric" placeholder="Facultatif">
+            <input class="input" type="number" id="rfr" name="rfr" min="0" step="500" inputmode="numeric" placeholder="Facultatif" data-max="1000000" data-max-message="Ce revenu fiscal de référence paraît erroné&#8239;: vérifiez votre avis d'imposition.">
             <span class="hint">
               C'est ce revenu, et non votre salaire actuel, qui détermine votre prêt à taux zéro. Vous le trouverez sur
-              votre avis d'imposition <span data-annee-rfr-avis>N-1</span>, à la ligne « revenu fiscal de référence ».
+              votre avis d'imposition <span data-annee-rfr-avis>N-1</span>
+            <span class="error-msg"><i class="ph ph-warning-circle" aria-hidden="true"></i>Vérifiez ce montant.</span>, à la ligne « revenu fiscal de référence ».
               Additionnez les avis de toutes les personnes qui occuperont le logement. Laissé vide, nous partons de vos
               revenus nets annualisés.
             </span>
@@ -270,7 +273,7 @@
 
           <div class="field">
             <label for="apport">Apport personnel disponible (€)</label>
-            <input class="input" type="number" id="apport" name="apport" min="0" step="500" placeholder="30000" inputmode="numeric" required>
+            <input class="input" type="number" id="apport" name="apport" min="0" step="500" placeholder="30000" inputmode="numeric" required data-max="2000000" data-max-message="Au-delà de 2 000 000 € d'apport, un financement se monte avec un conseiller, pas avec un simulateur.">
             <span class="hint">Épargne mobilisable, épargne salariale, donation familiale.</span>
             <span class="error-msg"><i class="ph ph-warning-circle" aria-hidden="true"></i>Indiquez votre apport, même s'il est faible.</span>
           </div>
@@ -491,8 +494,8 @@
   </div>
 </footer>
 
-<script src="assets/js/main.js?v=20261028e"></script>
-<script src="assets/js/zonage-abc.js?v=20261028e"></script>
-<script src="assets/js/simulateur.js?v=20261028e"></script>
+<script src="assets/js/main.js?v=20261028g"></script>
+<script src="assets/js/zonage-abc.js?v=20261028g"></script>
+<script src="assets/js/simulateur.js?v=20261028g"></script>
 </body>
 </html>
