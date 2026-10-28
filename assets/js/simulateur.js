@@ -126,7 +126,8 @@
       zone: "A",
       rfr: null,
       prixCible: null,
-      taux: null
+      taux: null,
+      notaireOfferts: false
     };
 
     /* Taux saisi par le visiteur, sinon le taux indicatif du site pour la duree. */
@@ -242,6 +243,13 @@
     syncPtzFields();
     syncTauxDefaut();
     show(0);
+
+    form.querySelectorAll("input[type='checkbox'][name]").forEach(function (input) {
+      state[input.name] = input.checked;
+      input.addEventListener("change", function () {
+        state[input.name] = input.checked;
+      });
+    });
 
     form.querySelectorAll("input[type='number']").forEach(function (input) {
       input.addEventListener("input", function () {
@@ -376,6 +384,11 @@
       if (el) el.textContent = value;
     }
 
+    /* Pour les formulations qui changent selon le cas, reperees par attribut. */
+    function texte(selecteur, valeur) {
+      form.querySelectorAll(selecteur).forEach(function (el) { el.textContent = valeur; });
+    }
+
     function compute() {
       var revenus = state.revenus || 0;
       var charges = state.charges || 0;
@@ -388,7 +401,9 @@
       var mensualiteMax = Math.max(revenus * MAX_DEBT_RATIO - charges, 0);
       var capacite = mensualiteMax > 0 ? loanCapacity(mensualiteMax, rate, duree) : 0;
 
-      var notaryRate = isNeuf() ? NOTARY.neuf : NOTARY.ancien;
+      /* Frais de notaire offerts : le vendeur les prend a sa charge, ils sortent
+         donc entierement du budget de l'acquereur. */
+      var notaryRate = state.notaireOfferts ? 0 : (isNeuf() ? NOTARY.neuf : NOTARY.ancien);
 
       /* Enveloppe disponible = emprunt + apport, dont il faut retirer les frais de notaire. */
       var enveloppe = capacite + apport;
@@ -422,7 +437,13 @@
       set("capacite", euros(capacite));
       set("mensualite", euros(mensualiteMax));
       set("apport-recap", euros(apport));
-      set("notaire", euros(fraisNotaire));
+      set("notaire", state.notaireOfferts ? "Offerts" : euros(fraisNotaire));
+      texte("[data-notaire-note]", state.notaireOfferts
+        ? "Pris en charge par le vendeur, ils sortent de votre budget."
+        : "2,5 % dans le neuf, 7,5 % dans l'ancien.");
+      texte("[data-notaire-sub]", state.notaireOfferts
+        ? "Prix du bien finançable, frais de notaire offerts"
+        : "Prix du bien finançable avec vos frais de notaire");
       set("interets", euros(coutInterets));
       set("taux", pourcent(rate));
       set("duree-recap", duree + " ans");
@@ -493,6 +514,9 @@
           set("cible-prix", euros(prixCible));
           set("cible-mensualite", euros(mensualiteCible));
           set("cible-plafond", euros(mensualiteMax));
+          texte("[data-cible-notaire]", state.notaireOfferts
+            ? "frais de notaire offerts"
+            : "frais de notaire inclus");
           set("cible-ptz", ptzCible > 0 ? " et prêt à taux zéro de " + euros(ptzCible) + " déduit" : "");
           set("cible-note", ptzCible > 0
             ? "Cette mensualité additionne le prêt bancaire et le remboursement du prêt à taux zéro, lissé ici sur la même durée. Un différé de remboursement, fréquent sur le PTZ, allégerait les premières années."

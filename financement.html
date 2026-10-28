@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
-<link rel="stylesheet" href="assets/css/style.css?v=20260929c">
+<link rel="stylesheet" href="assets/css/style.css?v=20261028">
 </head>
 <body>
 <a class="skip-link" href="#main">Aller au contenu</a>
@@ -143,6 +143,15 @@
             <input class="input" type="number" id="prixCible" name="prixCible" min="0" step="1000" inputmode="numeric" placeholder="Facultatif">
             <span class="hint">Si vous avez déjà un bien en vue, indiquez son prix : nous comparerons sa mensualité à votre mensualité maximale.</span>
           </div>
+
+          <label class="check" style="margin-top:22px;">
+            <input type="checkbox" id="notaireOfferts" name="notaireOfferts">
+            <span class="box" aria-hidden="true"><i class="ph-fill ph-check"></i></span>
+            <span class="txt">
+              <strong>Frais de notaire offerts par le vendeur</strong>
+              <span>Promotion fréquente dans le neuf. Nous les retirons alors de votre budget.</span>
+            </span>
+          </label>
 
           <p class="group-label" id="lbl-primo" style="margin-top:30px;">Êtes-vous primo-accédant ?</p>
           <div class="tile-group tile-2" role="radiogroup" aria-labelledby="lbl-primo">
@@ -305,15 +314,15 @@
           <div class="result-hero">
             <span class="label">Budget d'acquisition estimé</span>
             <div class="amount" data-result="budget">0 €</div>
-            <p class="sub">Prix du bien finançable avec vos frais de notaire, hors mobilier et hors stationnement.</p>
+            <p class="sub"><span data-notaire-sub>Prix du bien finançable avec vos frais de notaire</span>, hors mobilier et hors stationnement.</p>
           </div>
 
           <div class="result-card" data-bien-vise style="display:none;margin-bottom:24px;">
             <div class="k">Le bien que vous avez repéré</div>
             <div class="v" data-result="cible-mensualite">0 €</div>
             <p class="d">
-              Mensualité estimée pour un bien à <strong data-result="cible-prix">0 €</strong>, frais de notaire
-              inclus<span data-result="cible-ptz"></span>, à comparer à votre mensualité maximale de
+              Mensualité estimée pour un bien à <strong data-result="cible-prix">0 €</strong>, <span data-cible-notaire>frais de notaire
+              inclus</span><span data-result="cible-ptz"></span>, à comparer à votre mensualité maximale de
               <strong data-result="cible-plafond">0 €</strong>.
             </p>
             <p class="d" data-result="cible-verdict"></p>
@@ -342,7 +351,7 @@
             <div class="result-card">
               <div class="k">Frais de notaire estimés</div>
               <div class="v" data-result="notaire">0 €</div>
-              <p class="d">2,5 % dans le neuf, 7,5 % dans l'ancien.</p>
+              <p class="d" data-notaire-note>2,5 % dans le neuf, 7,5 % dans l'ancien.</p>
             </div>
             <div class="result-card">
               <div class="k">Coût total des intérêts</div>
@@ -482,8 +491,8 @@
   </div>
 </footer>
 
-<script src="assets/js/main.js?v=20260929c"></script>
-<script src="assets/js/zonage-abc.js?v=20260929c"></script>
-<script src="assets/js/simulateur.js?v=20260929c"></script>
+<script src="assets/js/main.js?v=20261028"></script>
+<script src="assets/js/zonage-abc.js?v=20261028"></script>
+<script src="assets/js/simulateur.js?v=20261028"></script>
 </body>
 </html>

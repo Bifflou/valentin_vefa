@@ -634,6 +634,44 @@ select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csv
 .tile.is-selected { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); box-shadow: 0 0 0 1px var(--accent); }
 .tile:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
 
+/* ---------- Case à cocher ---------- */
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: border-color 0.25s var(--ease), background 0.25s var(--ease);
+}
+.check:hover { border-color: var(--accent); }
+.check:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+.check input { position: absolute; opacity: 0; pointer-events: none; }
+.check .box {
+  flex: none;
+  width: 20px; height: 20px;
+  margin-top: 1px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  display: grid;
+  place-items: center;
+  color: transparent;
+  font-size: 13px;
+  transition: all 0.2s var(--ease);
+}
+.check input:checked ~ .box {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.check .txt strong { display: block; font-size: 14.5px; font-weight: 700; }
+.check .txt span { font-size: 12.5px; color: var(--ink-faint); }
+.check:has(input:checked) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+}
+
 /* ---------- FAQ ---------- */
 .faq-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 36px; }
 .faq-chip {
