@@ -467,13 +467,19 @@
       set("capacite", euros(capacite));
       set("mensualite", euros(mensualiteMax));
       set("apport-recap", euros(apport));
-      set("notaire", state.notaireOfferts ? "Offerts" : euros(fraisNotaire));
-      /* Cette carte porte sur le budget maximum, pas sur le bien que le visiteur
-         a peut-etre saisi : sans le dire, le montant parait aberrant quand les
-         deux scenarios sont eloignes. */
+      /* Quand un bien est repere, c'est SON montant de frais qui interesse le
+         visiteur. Celui du budget maximum passe dans la note, pour que les deux
+         restent lisibles sans se contredire. */
+      var fraisCible = (state.prixCible || 0) > 0 ? state.prixCible * notaryRate : null;
+      set("notaire", state.notaireOfferts
+        ? "Offerts"
+        : euros(fraisCible !== null ? fraisCible : fraisNotaire));
       texte("[data-notaire-note]", state.notaireOfferts
         ? "Pris en charge par le vendeur, ils sortent de votre budget."
-        : "2,5 % dans le neuf, 7,5 % dans l'ancien, calculés sur le budget maximum ci-dessus.");
+        : fraisCible !== null
+          ? (notaryRate * 100).toLocaleString("fr-FR") + " % du bien repéré à " + euros(state.prixCible) +
+            ". Sur votre budget maximum, ils atteindraient " + euros(fraisNotaire) + "."
+          : "2,5 % dans le neuf, 7,5 % dans l'ancien, calculés sur le budget maximum ci-dessus.");
       texte("[data-notaire-sub]", state.notaireOfferts
         ? "Prix du bien finançable, frais de notaire offerts"
         : "Prix du bien finançable avec vos frais de notaire");
