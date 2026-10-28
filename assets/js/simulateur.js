@@ -468,9 +468,12 @@
       set("mensualite", euros(mensualiteMax));
       set("apport-recap", euros(apport));
       set("notaire", state.notaireOfferts ? "Offerts" : euros(fraisNotaire));
+      /* Cette carte porte sur le budget maximum, pas sur le bien que le visiteur
+         a peut-etre saisi : sans le dire, le montant parait aberrant quand les
+         deux scenarios sont eloignes. */
       texte("[data-notaire-note]", state.notaireOfferts
         ? "Pris en charge par le vendeur, ils sortent de votre budget."
-        : "2,5 % dans le neuf, 7,5 % dans l'ancien.");
+        : "2,5 % dans le neuf, 7,5 % dans l'ancien, calculés sur le budget maximum ci-dessus.");
       texte("[data-notaire-sub]", state.notaireOfferts
         ? "Prix du bien finançable, frais de notaire offerts"
         : "Prix du bien finançable avec vos frais de notaire");
@@ -546,7 +549,7 @@
           set("cible-plafond", euros(mensualiteMax));
           texte("[data-cible-notaire]", state.notaireOfferts
             ? "frais de notaire offerts"
-            : "frais de notaire inclus");
+            : "frais de notaire de " + euros(prixCible * notaryRate) + " inclus");
           set("cible-ptz", ptzCible > 0 ? " et prêt à taux zéro de " + euros(ptzCible) + " déduit" : "");
           set("cible-note", ptzCible > 0
             ? "Cette mensualité additionne le prêt bancaire et le remboursement du prêt à taux zéro, lissé ici sur la même durée. Un différé de remboursement, fréquent sur le PTZ, allégerait les premières années."
